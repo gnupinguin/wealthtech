@@ -9,3 +9,10 @@ spring:
   sql:
     init:
       mode: always
+
+enrichment:
+  scheduler:
+    fixed-delay-ms: 5000
+  processor:
+    pool-size: 4
+    timeout-ms: 30000

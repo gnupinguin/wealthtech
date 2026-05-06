@@ -6,9 +6,13 @@ import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.model.Document;
 import io.gnupinguin.nevis.wealthtech.model.SocialLinkDto;
 import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
+import io.gnupinguin.nevis.wealthtech.persistence.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
 import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
+import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
 import io.gnupinguin.nevis.wealthtech.repository.DocumentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,10 +30,13 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final DocumentRepository documentRepository;
+    private final DocumentEnrichmentJobRepository enrichmentJobRepository;
 
-    public ClientService(ClientRepository clientRepository, DocumentRepository documentRepository) {
+    public ClientService(ClientRepository clientRepository, DocumentRepository documentRepository,
+                         DocumentEnrichmentJobRepository enrichmentJobRepository) {
         this.clientRepository = clientRepository;
         this.documentRepository = documentRepository;
+        this.enrichmentJobRepository = enrichmentJobRepository;
     }
 
     public Client getClient(UUID clientId) {
@@ -86,6 +93,8 @@ public class ClientService {
                 now
         ));
 
+        publishEnrichmentJobs(saved.id(), now);
+
         return new Document(
                 saved.id(),
                 saved.clientId(),
@@ -93,6 +102,18 @@ public class ClientService {
                 saved.content(),
                 saved.summary(),
                 saved.createdAt()
+        );
+    }
+
+    private void publishEnrichmentJobs(UUID documentId, Instant now) {
+        enrichmentJobRepository.save(enrichmentJob(documentId, JobType.SUMMARY, now));
+        enrichmentJobRepository.save(enrichmentJob(documentId, JobType.CHUNKING, now));
+    }
+
+    private static DocumentEnrichmentJobEntity enrichmentJob(UUID documentId, JobType type, Instant now) {
+        return new DocumentEnrichmentJobEntity(
+                null, documentId, type, JobStatus.PENDING,
+                0, 3, null, now, null, null, now, now
         );
     }
 
