@@ -1,13 +1,11 @@
 package io.gnupinguin.nevis.wealthtech;
 
+import integration.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class WealthTechApplicationTests {
+class WealthTechApplicationTests extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {
     }
-
 }
