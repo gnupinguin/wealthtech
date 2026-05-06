@@ -4,7 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.List;
+import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 @Table("clients")
@@ -14,5 +15,6 @@ public record ClientEntity(
         String lastName,
         String email,
         String description,
-        @MappedCollection(idColumn = "client_id", keyColumn = "position") List<SocialLink> socialLinks
+        Instant createdAt,
+        @MappedCollection(idColumn = "client_id") Set<SocialLink> socialLinks
 ) {}

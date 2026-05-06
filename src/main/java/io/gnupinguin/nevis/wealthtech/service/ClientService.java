@@ -4,6 +4,7 @@ import io.gnupinguin.nevis.wealthtech.model.Client;
 import io.gnupinguin.nevis.wealthtech.model.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.model.Document;
+import io.gnupinguin.nevis.wealthtech.model.SocialLinkDto;
 import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
@@ -11,11 +12,14 @@ import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.repository.DocumentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
@@ -30,15 +34,18 @@ public class ClientService {
 
     public Client getClient(UUID clientId) {
         return clientRepository.findById(clientId)
-                .map(c -> new Client(c.id(), c.firstName(), c.lastName(), c.email(), c.description(),
-                        c.socialLinks().stream().map(SocialLink::value).toList()))
+                .map(this::toClient)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + clientId));
     }
 
+    @Transactional
     public Client createClient(CreateClientRequest request) {
-        List<SocialLink> socialLinks = request.socialLinks() == null
-                ? List.of()
-                : request.socialLinks().stream().map(SocialLink::new).toList();
+        Instant now = Instant.now();
+        Set<SocialLink> socialLinks = request.socialLinks() == null
+                ? Set.of()
+                : request.socialLinks().stream()
+                        .map(r -> new SocialLink(null, r.url(), now))
+                        .collect(Collectors.toSet());
 
         ClientEntity saved = clientRepository.save(new ClientEntity(
                 null,
@@ -46,17 +53,11 @@ public class ClientService {
                 request.lastName(),
                 request.email(),
                 request.description(),
+                now,
                 socialLinks
         ));
 
-        return new Client(
-                saved.id(),
-                saved.firstName(),
-                saved.lastName(),
-                saved.email(),
-                saved.description(),
-                saved.socialLinks().stream().map(SocialLink::value).toList()
-        );
+        return toClient(saved);
     }
 
     public Document getClientDocument(UUID clientId, UUID documentId) {
@@ -69,17 +70,20 @@ public class ClientService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
     }
 
+    @Transactional
     public Document createDocument(UUID clientId, CreateDocumentRequest request) {
         if (!clientRepository.existsById(clientId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + clientId);
         }
+        Instant now = Instant.now();
         DocumentEntity saved = documentRepository.save(new DocumentEntity(
                 null,
                 clientId,
                 request.title(),
                 request.content(),
                 null,
-                Instant.now()
+                now,
+                now
         ));
 
         return new Document(
@@ -90,6 +94,13 @@ public class ClientService {
                 saved.summary(),
                 saved.createdAt()
         );
+    }
+
+    private Client toClient(ClientEntity c) {
+        List<SocialLinkDto> socialLinks = c.socialLinks().stream()
+                .map(s -> new SocialLinkDto(s.id(), s.url(), s.createdAt()))
+                .toList();
+        return new Client(c.id(), c.firstName(), c.lastName(), c.email(), c.description(), c.createdAt(), socialLinks);
     }
 
 }

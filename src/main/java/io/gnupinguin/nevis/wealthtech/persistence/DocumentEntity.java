@@ -13,5 +13,6 @@ public record DocumentEntity(
         String title,
         String content,
         String summary,
-        Instant createdAt
+        Instant createdAt,
+        Instant updatedAt
 ) {}

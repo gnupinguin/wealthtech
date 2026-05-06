@@ -9,5 +9,5 @@ public record CreateClientRequest(
         @JsonProperty("last_name") String lastName,
         String email,
         String description,
-        @JsonProperty("social_links") List<String> socialLinks
+        @JsonProperty("social_links") List<SocialLinkRequest> socialLinks
 ) {}

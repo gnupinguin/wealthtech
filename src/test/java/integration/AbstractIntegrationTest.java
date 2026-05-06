@@ -26,8 +26,8 @@ public abstract class AbstractIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
-            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 2));
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:pg17")
+            .waitingFor(Wait.forListeningPort());
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {

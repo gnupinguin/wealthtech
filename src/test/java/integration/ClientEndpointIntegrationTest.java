@@ -4,6 +4,7 @@ import io.gnupinguin.nevis.wealthtech.model.Client;
 import io.gnupinguin.nevis.wealthtech.model.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.model.Document;
+import io.gnupinguin.nevis.wealthtech.model.SocialLinkRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,10 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
                 "Doe",
                 "jane.doe@example.com",
                 "Wealth management client",
-                List.of("https://linkedin.com/in/janedoe", "https://twitter.com/janedoe")
+                List.of(
+                        new SocialLinkRequest("https://linkedin.com/in/janedoe"),
+                        new SocialLinkRequest("https://twitter.com/janedoe")
+                )
         );
 
         ResponseEntity<Client> response = restTemplate.postForEntity("/clients", request, Client.class);
@@ -35,9 +39,15 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
         assertThat(client.lastName()).isEqualTo("Doe");
         assertThat(client.email()).isEqualTo("jane.doe@example.com");
         assertThat(client.description()).isEqualTo("Wealth management client");
-        assertThat(client.socialLinks()).containsExactly(
-                "https://linkedin.com/in/janedoe",
-                "https://twitter.com/janedoe"
+        assertThat(client.createdAt()).isNotNull();
+        assertThat(client.socialLinks()).hasSize(2);
+        assertThat(client.socialLinks()).anySatisfy(s -> {
+            assertThat(s.url()).isEqualTo("https://linkedin.com/in/janedoe");
+            assertThat(s.id()).isNotNull();
+            assertThat(s.createdAt()).isNotNull();
+        });
+        assertThat(client.socialLinks()).anySatisfy(s ->
+            assertThat(s.url()).isEqualTo("https://twitter.com/janedoe")
         );
     }
 
@@ -61,6 +71,7 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
         assertThat(client.lastName()).isEqualTo("Smith");
         assertThat(client.email()).isEqualTo("john.smith@example.com");
         assertThat(client.description()).isNull();
+        assertThat(client.createdAt()).isNotNull();
         assertThat(client.socialLinks()).isEmpty();
     }
 

@@ -2,6 +2,7 @@ package io.gnupinguin.nevis.wealthtech.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,5 +12,6 @@ public record Client(
         @JsonProperty("last_name") String lastName,
         String email,
         String description,
-        @JsonProperty("social_links") List<String> socialLinks
+        @JsonProperty("created_at") Instant createdAt,
+        @JsonProperty("social_links") List<SocialLinkDto> socialLinks
 ) {}
