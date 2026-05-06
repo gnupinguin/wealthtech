@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: WealthTech
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wealthtech
+    username: wealthtech
+    password: wealthtech
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always

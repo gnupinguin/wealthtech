@@ -1,0 +1,183 @@
+openapi: 3.1.0
+info:
+  title: Nevis Search Service API
+  version: 1.1.0
+  description: |
+    Search API for clients and their documents.
+
+    - Clients are searched via keyword matching (email, name, description)
+    - Documents are searched via semantic similarity (embeddings)
+    - Results are returned in separate sections because scores are not directly comparable
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /clients:
+    post:
+      summary: Create client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}/documents:
+    post:
+      summary: Create document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDocumentRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /search:
+    get:
+      summary: Search clients and documents
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+components:
+  schemas:
+
+    CreateClientRequest:
+      type: object
+      required: [first_name, last_name, email]
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        description:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        description:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
+
+    CreateDocumentRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        summary:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSearchResult"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSearchResult"
+
+    ClientSearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        score:
+          type: number
+          format: float
+
+    DocumentSearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        score:
+          type: number
+          format: float
+        title:
+          type: string
+        summary:
+          type: string
+        matched_text:
+          type: string

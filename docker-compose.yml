@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: wealthtech-postgres
+    environment:
+      POSTGRES_DB: wealthtech
+      POSTGRES_USER: wealthtech
+      POSTGRES_PASSWORD: wealthtech
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
