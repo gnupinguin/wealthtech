@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
-public record DocumentSearchResult(
+public record DocumentSearchResponse(
         UUID id,
         @JsonProperty("client_id") UUID clientId,
         float score,

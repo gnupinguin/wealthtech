@@ -3,8 +3,7 @@ package io.gnupinguin.nevis.wealthtech.service.enrichment;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.JobType;
-import io.gnupinguin.nevis.wealthtech.repository.queue.DocumentEnrichmentJobLockRepository;
-import io.gnupinguin.nevis.wealthtech.repository.queue.DocumentEnrichmentJobRepository;
+import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,19 +25,16 @@ import java.util.stream.Collectors;
 @Component
 public class DocumentEnrichmentScheduler {
 
-    private final DocumentEnrichmentJobLockRepository lockRepository;
     private final DocumentEnrichmentJobRepository jobRepository;
     private final Map<JobType, DocumentEnrichmentJobProcessor> processors;
     private final ThreadPoolTaskExecutor processorExecutor;
     private final long processorTimeoutMs;
 
     public DocumentEnrichmentScheduler(
-            DocumentEnrichmentJobLockRepository lockRepository,
             DocumentEnrichmentJobRepository jobRepository,
             List<DocumentEnrichmentJobProcessor> processors,
             @Qualifier("enrichmentProcessorExecutor") ThreadPoolTaskExecutor processorExecutor,
             @Value("${enrichment.processor.timeout-ms:30000}") long processorTimeoutMs) {
-        this.lockRepository = lockRepository;
         this.jobRepository = jobRepository;
         this.processors = processors.stream()
                 .collect(Collectors.toMap(DocumentEnrichmentJobProcessor::type, Function.identity()));
@@ -48,12 +44,17 @@ public class DocumentEnrichmentScheduler {
 
     @Scheduled(fixedDelayString = "${enrichment.scheduler.fixed-delay-ms:5000}")
     public void processNextJob() {
-        lockRepository.tryLockNextPendingJob().ifPresent(this::runWithTimeout);
+        var jobHolder = jobRepository.tryLockNextPendingJob();
+        if (jobHolder.isEmpty()) {
+            log.info("There are no jobs for processing");
+        } else {
+            var job = jobHolder.get();
+            log.info("Locked job {} (type={}, attempts={}/{})", job.id(), job.type(), job.attempts(), job.maxAttempts());
+            runWithTimeout(job);
+        }
     }
 
     private void runWithTimeout(DocumentEnrichmentJobEntity job) {
-        log.info("Locked job {} (type={}, attempts={}/{})", job.id(), job.type(), job.attempts(), job.maxAttempts());
-
         var processor = processors.get(job.type());
         if (processor == null) {
             log.error("No processor found for job type {}", job.type());

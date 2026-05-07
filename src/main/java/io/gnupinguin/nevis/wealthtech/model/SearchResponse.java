@@ -4,6 +4,6 @@ import java.util.List;
 
 public record SearchResponse(
         String query,
-        List<ClientSearchResult> clients,
-        List<DocumentSearchResult> documents
+        List<ClientSearchResponse> clients,
+        List<DocumentSearchResponse> documents
 ) {}

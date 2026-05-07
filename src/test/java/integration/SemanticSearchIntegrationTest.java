@@ -1,16 +1,7 @@
 package integration;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
-import io.gnupinguin.nevis.wealthtech.model.Client;
-import io.gnupinguin.nevis.wealthtech.model.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.model.Document;
-import io.gnupinguin.nevis.wealthtech.model.SearchResponse;
-import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
-import io.gnupinguin.nevis.wealthtech.persistence.JobType;
-import io.gnupinguin.nevis.wealthtech.service.enrichment.ChunkingJobProcessor;
-import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentScheduler;
+import io.gnupinguin.nevis.wealthtech.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -23,7 +14,6 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -31,10 +21,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -85,8 +71,8 @@ class SemanticSearchIntegrationTest {
     }
 
     @Test
-    void search_withNoDocuments_returnsEmptyResult() {
-        SearchResponse response = restTemplate.getForObject("/search?q=investment strategy", SearchResponse.class);
+    void testSearchWithNoDocumentsReturnsEmptyResult() {
+        var response = restTemplate.getForObject("/search?q=investment strategy", SearchResponse.class);
 
         assertThat(response).isNotNull();
         assertThat(response.query()).isEqualTo("investment strategy");
@@ -95,23 +81,23 @@ class SemanticSearchIntegrationTest {
     }
 
     @Test
-    void search_ranksSemanticallyRelevantDocumentHigher() throws InterruptedException {
-        Client techClient = createClient("John", "Tech", "john.tech@example.com");
-        Client estateClient = createClient("Jane", "Estate", "jane.estate@example.com");
+    void testSearchRanksSemanticallyRelevantDocumentHigher() throws InterruptedException {
+        var techClient = createClient("John", "Tech", "john.tech@example.com");
+        var estateClient = createClient("Jane", "Estate", "jane.estate@example.com");
 
-        Document techDoc = createDocument(techClient.id(), "Technology Portfolio",
+        var techDoc = createDocument(techClient.id(), "Technology Portfolio",
                 "This client focuses on technology sector investments including AI companies, " +
                 "cloud computing, semiconductor manufacturers, and software development firms. " +
                 "Holdings include major tech stocks such as Apple, Google, Microsoft, and NVIDIA.");
 
-        Document estateDoc = createDocument(estateClient.id(), "Real Estate Portfolio",
+        var estateDoc = createDocument(estateClient.id(), "Real Estate Portfolio",
                 "This client invests in commercial real estate, residential rental properties, " +
                 "and REITs. The portfolio includes office buildings, apartment complexes, and " +
                 "shopping centers with focus on stable rental income and property appreciation.");
 
         log.info("Test pause for async synchronization");
         TimeUnit.SECONDS.sleep(10);
-        SearchResponse techSearch = restTemplate.getForObject(
+        var techSearch = restTemplate.getForObject(
                 "/search?q=AI semiconductor technology stocks", SearchResponse.class);
 
         assertThat(techSearch).isNotNull();
@@ -119,7 +105,7 @@ class SemanticSearchIntegrationTest {
         assertThat(techSearch.documents().getFirst().id()).isEqualTo(techDoc.id());
         assertThat(techSearch.clients().getFirst().id()).isEqualTo(techClient.id());
 
-        SearchResponse estateSearch = restTemplate.getForObject(
+        var estateSearch = restTemplate.getForObject(
                 "/search?q=rental property real estate REIT", SearchResponse.class);
 
         assertThat(estateSearch).isNotNull();

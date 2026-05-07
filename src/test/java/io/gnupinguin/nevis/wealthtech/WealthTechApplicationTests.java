@@ -6,6 +6,6 @@ import org.junit.jupiter.api.Test;
 class WealthTechApplicationTests extends AbstractIntegrationTest {
 
     @Test
-    void contextLoads() {
+    void testContextLoads() {
     }
 }

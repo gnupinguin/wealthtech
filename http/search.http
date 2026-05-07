@@ -11,6 +11,6 @@ GET http://localhost:8080/search?q=real estate high net worth
 
 
 ### Semantic Search - Client Background
-GET http://localhost:8080/search?q=John
+GET http://localhost:8080/search?q=sport
 
 ###
