@@ -3,6 +3,7 @@ package integration;
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -10,8 +11,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.ResponseErrorHandler;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -21,8 +21,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Tag("integration")
 @Testcontainers
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = WealthTechApplication.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = WealthTechApplication.class,
+        properties = "spring.ai.openai.api-key=test-key"
+)
 public abstract class AbstractIntegrationTest {
+
+    @MockitoBean
+    protected EmbeddingModel embeddingModel;
 
     @Container
     @ServiceConnection
@@ -48,7 +55,7 @@ public abstract class AbstractIntegrationTest {
     void setUp() {
         restTemplate = new RestTemplate();
         restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:" + port));
-        restTemplate.setErrorHandler(_ -> false);
+        restTemplate.setErrorHandler((response) -> false);
     }
 
     @BeforeEach

@@ -5,11 +5,13 @@ import io.gnupinguin.nevis.wealthtech.model.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.model.Document;
 import io.gnupinguin.nevis.wealthtech.service.ClientService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 public class ClientEndpoint {
 
@@ -27,6 +29,7 @@ public class ClientEndpoint {
     @PostMapping("/clients")
     @ResponseStatus(HttpStatus.CREATED)
     public Client createClient(@RequestBody CreateClientRequest request) {
+        log.info("Create new client request: {}", request);
         return clientService.createClient(request);
     }
 
@@ -39,6 +42,7 @@ public class ClientEndpoint {
     @ResponseStatus(HttpStatus.CREATED)
     public Document createDocument(@PathVariable UUID clientId,
                                    @RequestBody CreateDocumentRequest request) {
+        log.info("Create new document request: {}", request);
         return clientService.createDocument(clientId, request);
     }
 

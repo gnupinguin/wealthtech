@@ -31,7 +31,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
 //    implementation("org.springframework.ai:spring-ai-advisors-vector-store")
-//    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
 //    implementation("org.springframework.ai:spring-ai-starter-vector-store-pgvector")
 
     compileOnly("org.projectlombok:lombok")
@@ -75,4 +75,13 @@ tasks.register<Test>("integrationTest") {
         includeTags("integration")
     }
     shouldRunAfter("test")
+}
+
+tasks.register<Test>("e2eTest") {
+    description = "Runs end-to-end tests against real external services."
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("e2e")
+    }
+    shouldRunAfter("integrationTest")
 }

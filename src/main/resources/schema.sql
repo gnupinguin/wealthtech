@@ -32,7 +32,7 @@ CREATE TABLE document_chunks (
                                  document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
                                  chunk_index INT NOT NULL,
                                  content TEXT NOT NULL,
-                                 embedding VECTOR(1563) NOT NULL,
+                                 embedding VECTOR(1536) NOT NULL,
                                  created_at TIMESTAMPTZ NOT NULL,
 
                                  CONSTRAINT uk_document_chunks_document_index

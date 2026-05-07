@@ -1,0 +1,141 @@
+package integration;
+
+import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
+import io.gnupinguin.nevis.wealthtech.model.Client;
+import io.gnupinguin.nevis.wealthtech.model.CreateClientRequest;
+import io.gnupinguin.nevis.wealthtech.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.model.Document;
+import io.gnupinguin.nevis.wealthtech.model.SearchResponse;
+import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
+import io.gnupinguin.nevis.wealthtech.persistence.JobType;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.ChunkingJobProcessor;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentScheduler;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Slf4j
+@Tag("e2e")
+@Testcontainers
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = WealthTechApplication.class
+)
+@ActiveProfiles("test")
+class SemanticSearchIntegrationTest {
+
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:pg17")
+            .waitingFor(Wait.forListeningPort());
+
+    @DynamicPropertySource
+    static void postgresProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    private JdbcClient jdbcClient;
+
+    private RestTemplate restTemplate;
+
+    @BeforeEach
+    void setUp() {
+        restTemplate = new RestTemplate();
+        restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:" + port));
+        restTemplate.setErrorHandler((_) -> false);
+    }
+
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcClient.sql("DELETE FROM documents").update();
+        jdbcClient.sql("DELETE FROM client_social_links").update();
+        jdbcClient.sql("DELETE FROM clients").update();
+    }
+
+    @Test
+    void search_withNoDocuments_returnsEmptyResult() {
+        SearchResponse response = restTemplate.getForObject("/search?q=investment strategy", SearchResponse.class);
+
+        assertThat(response).isNotNull();
+        assertThat(response.query()).isEqualTo("investment strategy");
+        assertThat(response.documents()).isEmpty();
+        assertThat(response.clients()).isEmpty();
+    }
+
+    @Test
+    void search_ranksSemanticallyRelevantDocumentHigher() throws InterruptedException {
+        Client techClient = createClient("John", "Tech", "john.tech@example.com");
+        Client estateClient = createClient("Jane", "Estate", "jane.estate@example.com");
+
+        Document techDoc = createDocument(techClient.id(), "Technology Portfolio",
+                "This client focuses on technology sector investments including AI companies, " +
+                "cloud computing, semiconductor manufacturers, and software development firms. " +
+                "Holdings include major tech stocks such as Apple, Google, Microsoft, and NVIDIA.");
+
+        Document estateDoc = createDocument(estateClient.id(), "Real Estate Portfolio",
+                "This client invests in commercial real estate, residential rental properties, " +
+                "and REITs. The portfolio includes office buildings, apartment complexes, and " +
+                "shopping centers with focus on stable rental income and property appreciation.");
+
+        log.info("Test pause for async synchronization");
+        TimeUnit.SECONDS.sleep(10);
+        SearchResponse techSearch = restTemplate.getForObject(
+                "/search?q=AI semiconductor technology stocks", SearchResponse.class);
+
+        assertThat(techSearch).isNotNull();
+        assertThat(techSearch.documents()).isNotEmpty();
+        assertThat(techSearch.documents().getFirst().id()).isEqualTo(techDoc.id());
+        assertThat(techSearch.clients().getFirst().id()).isEqualTo(techClient.id());
+
+        SearchResponse estateSearch = restTemplate.getForObject(
+                "/search?q=rental property real estate REIT", SearchResponse.class);
+
+        assertThat(estateSearch).isNotNull();
+        assertThat(estateSearch.documents()).isNotEmpty();
+        assertThat(estateSearch.documents().getFirst().id()).isEqualTo(estateDoc.id());
+        assertThat(estateSearch.clients().getFirst().id()).isEqualTo(estateClient.id());
+    }
+
+
+    private Client createClient(String firstName, String lastName, String email) {
+        var request = new CreateClientRequest(firstName, lastName, email, null, null);
+        return restTemplate.postForObject("/clients", request, Client.class);
+    }
+
+    private Document createDocument(UUID clientId, String title, String content) {
+        var request = new CreateDocumentRequest(title, content);
+        return restTemplate.postForObject("/clients/{id}/documents", request, Document.class, clientId);
+    }
+}

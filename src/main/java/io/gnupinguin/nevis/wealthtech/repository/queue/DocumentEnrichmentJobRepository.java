@@ -1,4 +1,4 @@
-package io.gnupinguin.nevis.wealthtech.repository;
+package io.gnupinguin.nevis.wealthtech.repository.queue;
 
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
 import org.springframework.data.repository.CrudRepository;

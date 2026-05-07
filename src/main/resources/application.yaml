@@ -1,14 +1,19 @@
 spring:
   application:
     name: WealthTech
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+      chat:
+        enabled: false
   datasource:
     url: jdbc:postgresql://localhost:5432/wealthtech
     username: wealthtech
     password: wealthtech
     driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always
 
 enrichment:
   scheduler:

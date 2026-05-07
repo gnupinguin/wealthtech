@@ -12,7 +12,7 @@ import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
 import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
+import io.gnupinguin.nevis.wealthtech.repository.queue.DocumentEnrichmentJobRepository;
 import io.gnupinguin.nevis.wealthtech.repository.DocumentRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

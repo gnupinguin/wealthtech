@@ -3,8 +3,8 @@ package io.gnupinguin.nevis.wealthtech.service.enrichment;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.JobType;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobLockRepository;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
+import io.gnupinguin.nevis.wealthtech.repository.queue.DocumentEnrichmentJobLockRepository;
+import io.gnupinguin.nevis.wealthtech.repository.queue.DocumentEnrichmentJobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,19 +64,19 @@ public class DocumentEnrichmentScheduler {
         try {
             runJob(job, processor);
             jobRepository.save(completed(job));
-            log.info("Job {} completed successfully", job.id());
+            log.info("Job {}/{} completed successfully", job.id(), job.type());
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof TimeoutException) {
-                log.warn("Job {} timed out after {}ms", job.id(), processorTimeoutMs);
+                log.warn("Job {}/{} timed out after {}ms", job.id(), job.type(), processorTimeoutMs);
                 handleFailure(job, "Processing timed out after " + processorTimeoutMs + "ms");
             } else {
-                log.error("Job {} failed: {}", job.id(), cause.getMessage(), cause);
+                log.error("Job {}/{} failed: {}", job.id(), job.type(), cause.getMessage(), cause);
                 handleFailure(job, cause.getMessage());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Job {} interrupted, requeueing", job.id());
+            log.warn("Job {}/{} interrupted, requeueing", job.id(), job.type());
             jobRepository.save(requeuedWithBackoff(job, "Interrupted"));
         }
     }

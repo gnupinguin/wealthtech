@@ -1,0 +1,47 @@
+### Create Client
+POST http://localhost:8080/clients
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "description": "High net worth individual interested in tech stocks and real estate.",
+  "social_links": [
+    {
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/in/johndoe"
+    }
+  ]
+}
+
+> {%
+  client.global.set("clientId", response.body.id);
+%}
+
+###
+
+### Get Client
+GET http://localhost:8080/clients/{{clientId}}
+
+###
+
+### Create Document for Client
+POST http://localhost:8080/clients/{{clientId}}/documents
+Content-Type: application/json
+
+{
+  "title": "Investment Strategy 2025",
+  "content": "The client prefers long-term growth investments with a moderate risk tolerance. Focus on diversified portfolio including S&P 500 index funds, government bonds, and selected tech equities. Avoid speculative assets and cryptocurrencies."
+}
+
+> {%
+  client.global.set("documentId", response.body.id);
+%}
+
+###
+
+### Get Client Document
+GET http://localhost:8080/clients/{{clientId}}/documents/{{documentId}}
+
+###

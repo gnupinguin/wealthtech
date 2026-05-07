@@ -10,5 +10,5 @@ public record DocumentSearchResult(
         float score,
         String title,
         String summary,
-        @JsonProperty("matched_text") String matchedText
+        @JsonProperty("matched_chunk") String matchedChunk
 ) {}

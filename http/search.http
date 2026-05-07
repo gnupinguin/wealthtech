@@ -1,0 +1,16 @@
+### Semantic Search
+GET http://localhost:8080/search?q=investment strategy tech stocks
+
+###
+
+### Semantic Search - Risk Profile
+GET http://localhost:8080/search?q=moderate risk tolerance portfolio diversification
+
+### Semantic Search - Client Background
+GET http://localhost:8080/search?q=real estate high net worth
+
+
+### Semantic Search - Client Background
+GET http://localhost:8080/search?q=John
+
+###
