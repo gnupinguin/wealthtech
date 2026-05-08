@@ -4,6 +4,7 @@ import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.JobType;
 import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.processor.DocumentEnrichmentJobProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +47,7 @@ public class DocumentEnrichmentScheduler {
     public void processNextJob() {
         var jobHolder = jobRepository.tryLockNextPendingJob();
         if (jobHolder.isEmpty()) {
-            log.info("There are no jobs for processing");
+            log.debug("There are no jobs for processing");
         } else {
             var job = jobHolder.get();
             log.info("Locked job {} (type={}, attempts={}/{})", job.id(), job.type(), job.attempts(), job.maxAttempts());

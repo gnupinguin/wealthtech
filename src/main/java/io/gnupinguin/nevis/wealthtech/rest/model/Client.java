@@ -1,6 +1,7 @@
-package io.gnupinguin.nevis.wealthtech.model;
+package io.gnupinguin.nevis.wealthtech.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.gnupinguin.nevis.wealthtech.model.SocialLinkDto;
 
 import java.time.Instant;
 import java.util.List;

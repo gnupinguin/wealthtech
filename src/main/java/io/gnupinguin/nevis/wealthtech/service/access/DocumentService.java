@@ -1,7 +1,7 @@
 package io.gnupinguin.nevis.wealthtech.service.access;
 
-import io.gnupinguin.nevis.wealthtech.model.Document;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.model.Document;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;

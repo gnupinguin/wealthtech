@@ -17,7 +17,7 @@ spring:
 
 enrichment:
   scheduler:
-    fixed-delay-ms: 5000
+    fixed-delay-ms: 1000
   processor:
     pool-size: 4
     timeout-ms: 30000

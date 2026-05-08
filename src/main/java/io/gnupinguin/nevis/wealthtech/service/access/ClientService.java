@@ -1,6 +1,6 @@
 package io.gnupinguin.nevis.wealthtech.service.access;
 
-import io.gnupinguin.nevis.wealthtech.model.Client;
+import io.gnupinguin.nevis.wealthtech.rest.model.Client;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
 import org.jspecify.annotations.NonNull;
 

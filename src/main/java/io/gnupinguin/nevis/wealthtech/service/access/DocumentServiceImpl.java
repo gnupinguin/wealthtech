@@ -1,11 +1,11 @@
 package io.gnupinguin.nevis.wealthtech.service.access;
 
-import io.gnupinguin.nevis.wealthtech.model.Document;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.JobType;
 import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.repository.DocumentRepository;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.model.Document;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.JobService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;

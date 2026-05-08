@@ -1,10 +1,10 @@
 package io.gnupinguin.nevis.wealthtech.service.access;
 
-import io.gnupinguin.nevis.wealthtech.model.Client;
 import io.gnupinguin.nevis.wealthtech.model.SocialLinkDto;
 import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
 import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
+import io.gnupinguin.nevis.wealthtech.rest.model.Client;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;

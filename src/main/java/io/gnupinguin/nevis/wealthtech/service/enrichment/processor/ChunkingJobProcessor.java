@@ -1,4 +1,4 @@
-package io.gnupinguin.nevis.wealthtech.service.enrichment;
+package io.gnupinguin.nevis.wealthtech.service.enrichment.processor;
 
 import io.gnupinguin.nevis.wealthtech.model.DocumentChunk;
 import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;

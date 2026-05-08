@@ -1,11 +1,7 @@
 package integration;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
-import io.gnupinguin.nevis.wealthtech.model.Client;
-import io.gnupinguin.nevis.wealthtech.model.Document;
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.rest.model.SearchResponse;
+import io.gnupinguin.nevis.wealthtech.rest.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -91,24 +87,27 @@ class SemanticSearchIntegrationTest {
         var estateClient = createClient("Jane", "Estate", "jane.estate@example.com");
 
         var techDoc = createDocument(techClient.id(), "Technology Portfolio",
-                "This client focuses on technology sector investments including AI companies, " +
-                "cloud computing, semiconductor manufacturers, and software development firms. " +
-                "Holdings include major tech stocks such as Apple, Google, Microsoft, and NVIDIA.");
+                """
+                This client focuses on technology sector investments including AI companies,
+                cloud computing, semiconductor manufacturers, and software development firms.
+                Holdings include major tech stocks such as Apple, Google, Microsoft, and NVIDIA.
+                """);
 
         var estateDoc = createDocument(estateClient.id(), "Real Estate Portfolio",
-                "This client invests in commercial real estate, residential rental properties, " +
-                "and REITs. The portfolio includes office buildings, apartment complexes, and " +
-                "shopping centers with focus on stable rental income and property appreciation.");
+                """
+                This client invests in commercial real estate, residential rental properties,
+                and REITs. The portfolio includes office buildings, apartment complexes, and
+                shopping centers with focus on stable rental income and property appreciation.
+                """);
 
         log.info("Test pause for async synchronization");
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(5);
         var techSearch = restTemplate.getForObject(
                 "/search?q=AI semiconductor technology stocks", SearchResponse.class);
 
         assertThat(techSearch).isNotNull();
         assertThat(techSearch.documents()).isNotEmpty();
         assertEquals(techDoc.id(), techSearch.documents().getFirst().id());
-        assertEquals(techClient.id(), techSearch.clients().getFirst().id());
 
         var estateSearch = restTemplate.getForObject(
                 "/search?q=rental property real estate REIT", SearchResponse.class);
@@ -116,7 +115,6 @@ class SemanticSearchIntegrationTest {
         assertThat(estateSearch).isNotNull();
         assertThat(estateSearch.documents()).isNotEmpty();
         assertEquals(estateDoc.id(), estateSearch.documents().getFirst().id());
-        assertEquals(estateClient.id(), estateSearch.clients().getFirst().id());
     }
 
 

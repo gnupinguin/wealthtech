@@ -1,9 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.rest;
 
-import io.gnupinguin.nevis.wealthtech.model.Client;
-import io.gnupinguin.nevis.wealthtech.model.Document;
+import io.gnupinguin.nevis.wealthtech.rest.model.Client;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.model.Document;
 import io.gnupinguin.nevis.wealthtech.service.access.ClientService;
 import io.gnupinguin.nevis.wealthtech.service.access.DocumentService;
 import lombok.RequiredArgsConstructor;
