@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ClientQueryNormalizerTest {
 
@@ -14,56 +15,56 @@ class ClientQueryNormalizerTest {
     void testBasicQueryIsLowercasedAndPrefixed() {
         var result = normalizer.normalize("Hello");
 
-        assertThat(result.query()).isEqualTo("hello");
-        assertThat(result.prefix()).isEqualTo("hello%");
+        assertEquals("hello", result.query());
+        assertEquals("hello%", result.prefix());
     }
 
     @Test
     void testLeadingAndTrailingWhitespaceIsTrimmed() {
         var result = normalizer.normalize("  Alice  ");
 
-        assertThat(result.query()).isEqualTo("alice");
-        assertThat(result.prefix()).isEqualTo("alice%");
+        assertEquals("alice", result.query());
+        assertEquals("alice%", result.prefix());
     }
 
     @Test
     void testUppercaseLettersAreLowercased() {
         var result = normalizer.normalize("JOHN DOE");
 
-        assertThat(result.query()).isEqualTo("john doe");
-        assertThat(result.prefix()).isEqualTo("john doe%");
+        assertEquals("john doe", result.query());
+        assertEquals("john doe%", result.prefix());
     }
 
     @Test
     void testPercentSignIsEscapedInPrefix() {
         var result = normalizer.normalize("50%");
 
-        assertThat(result.query()).isEqualTo("50%");
-        assertThat(result.prefix()).isEqualTo("50\\%%");
+        assertEquals("50%", result.query());
+        assertEquals("50\\%%", result.prefix());
     }
 
     @Test
     void testUnderscoreIsEscapedInPrefix() {
         var result = normalizer.normalize("john_doe");
 
-        assertThat(result.query()).isEqualTo("john_doe");
-        assertThat(result.prefix()).isEqualTo("john\\_doe%");
+        assertEquals("john_doe", result.query());
+        assertEquals("john\\_doe%", result.prefix());
     }
 
     @Test
     void testBackslashIsEscapedInPrefix() {
         var result = normalizer.normalize("foo\\bar");
 
-        assertThat(result.query()).isEqualTo("foo\\bar");
-        assertThat(result.prefix()).isEqualTo("foo\\\\bar%");
+        assertEquals("foo\\bar", result.query());
+        assertEquals("foo\\\\bar%", result.prefix());
     }
 
     @Test
     void testMultipleSpecialCharsAreAllEscapedInPrefix() {
         var result = normalizer.normalize("a%b_c\\d");
 
-        assertThat(result.query()).isEqualTo("a%b_c\\d");
-        assertThat(result.prefix()).isEqualTo("a\\%b\\_c\\\\d%");
+        assertEquals("a%b_c\\d", result.query());
+        assertEquals("a\\%b\\_c\\\\d%", result.prefix());
     }
 
     @Test
@@ -71,7 +72,7 @@ class ClientQueryNormalizerTest {
         var result = normalizer.normalize("");
 
         assertThat(result.query()).isEmpty();
-        assertThat(result.prefix()).isEqualTo("%");
+        assertEquals("%", result.prefix());
     }
 
     @Test
@@ -79,7 +80,7 @@ class ClientQueryNormalizerTest {
         var result = normalizer.normalize("   ");
 
         assertThat(result.query()).isEmpty();
-        assertThat(result.prefix()).isEqualTo("%");
+        assertEquals("%", result.prefix());
     }
 
     @ParameterizedTest(name = "input=\"{0}\" -> query=\"{1}\", prefix=\"{2}\"")
@@ -91,8 +92,8 @@ class ClientQueryNormalizerTest {
     void testNormalizeVariousInputs(String input, String expectedQuery, String expectedPrefix) {
         var result = normalizer.normalize(input);
 
-        assertThat(result.query()).isEqualTo(expectedQuery);
-        assertThat(result.prefix()).isEqualTo(expectedPrefix);
+        assertEquals(expectedQuery, result.query());
+        assertEquals(expectedPrefix, result.prefix());
     }
 
 }

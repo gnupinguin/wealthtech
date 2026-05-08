@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
 
@@ -26,23 +27,23 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
 
         var response = restTemplate.postForEntity("/clients", request, Client.class);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         var client = response.getBody();
         assertThat(client).isNotNull();
         assertThat(client.id()).isNotNull();
-        assertThat(client.firstName()).isEqualTo("Jane");
-        assertThat(client.lastName()).isEqualTo("Doe");
-        assertThat(client.email()).isEqualTo("jane.doe@example.com");
-        assertThat(client.description()).isEqualTo("Wealth management client");
+        assertEquals("Jane", client.firstName());
+        assertEquals("Doe", client.lastName());
+        assertEquals("jane.doe@example.com", client.email());
+        assertEquals("Wealth management client", client.description());
         assertThat(client.createdAt()).isNotNull();
         assertThat(client.socialLinks()).hasSize(2);
         assertThat(client.socialLinks()).anySatisfy(s -> {
-            assertThat(s.url()).isEqualTo("https://linkedin.com/in/janedoe");
+            assertEquals("https://linkedin.com/in/janedoe", s.url());
             assertThat(s.id()).isNotNull();
             assertThat(s.createdAt()).isNotNull();
         });
         assertThat(client.socialLinks()).anySatisfy(s ->
-            assertThat(s.url()).isEqualTo("https://twitter.com/janedoe")
+            assertEquals("https://twitter.com/janedoe", s.url())
         );
     }
 
@@ -58,13 +59,13 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
 
         var response = restTemplate.postForEntity("/clients", request, Client.class);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         var client = response.getBody();
         assertThat(client).isNotNull();
         assertThat(client.id()).isNotNull();
-        assertThat(client.firstName()).isEqualTo("John");
-        assertThat(client.lastName()).isEqualTo("Smith");
-        assertThat(client.email()).isEqualTo("john.smith@example.com");
+        assertEquals("John", client.firstName());
+        assertEquals("Smith", client.lastName());
+        assertEquals("john.smith@example.com", client.email());
         assertThat(client.description()).isNull();
         assertThat(client.createdAt()).isNotNull();
         assertThat(client.socialLinks()).isEmpty();
@@ -82,7 +83,7 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
 
         var response = restTemplate.postForEntity("/clients", request, Client.class);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         var client = response.getBody();
         assertThat(client).isNotNull();
         assertThat(client.socialLinks()).isEmpty();
@@ -97,13 +98,13 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
                 "/clients/{id}/documents", request, Document.class, client.id()
         );
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         var document = response.getBody();
         assertThat(document).isNotNull();
         assertThat(document.id()).isNotNull();
-        assertThat(document.clientId()).isEqualTo(client.id());
-        assertThat(document.title()).isEqualTo("Investment Policy");
-        assertThat(document.content()).isEqualTo("This is the investment policy content.");
+        assertEquals(client.id(), document.clientId());
+        assertEquals("Investment Policy", document.title());
+        assertEquals("This is the investment policy content.", document.content());
         assertThat(document.summary()).isNull();
         assertThat(document.createdAt()).isNotNull();
     }
@@ -117,7 +118,7 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
                 "/clients/{id}/documents", request, Void.class, nonExistingClientId
         );
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     private Client createClient(String firstName, String lastName, String email) {

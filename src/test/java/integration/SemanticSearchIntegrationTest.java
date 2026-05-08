@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @Tag("e2e")
@@ -75,7 +76,7 @@ class SemanticSearchIntegrationTest {
         var response = restTemplate.getForObject("/search?q=investment strategy", SearchResponse.class);
 
         assertThat(response).isNotNull();
-        assertThat(response.query()).isEqualTo("investment strategy");
+        assertEquals("investment strategy", response.query());
         assertThat(response.documents()).isEmpty();
         assertThat(response.clients()).isEmpty();
     }
@@ -102,16 +103,16 @@ class SemanticSearchIntegrationTest {
 
         assertThat(techSearch).isNotNull();
         assertThat(techSearch.documents()).isNotEmpty();
-        assertThat(techSearch.documents().getFirst().id()).isEqualTo(techDoc.id());
-        assertThat(techSearch.clients().getFirst().id()).isEqualTo(techClient.id());
+        assertEquals(techDoc.id(), techSearch.documents().getFirst().id());
+        assertEquals(techClient.id(), techSearch.clients().getFirst().id());
 
         var estateSearch = restTemplate.getForObject(
                 "/search?q=rental property real estate REIT", SearchResponse.class);
 
         assertThat(estateSearch).isNotNull();
         assertThat(estateSearch.documents()).isNotEmpty();
-        assertThat(estateSearch.documents().getFirst().id()).isEqualTo(estateDoc.id());
-        assertThat(estateSearch.clients().getFirst().id()).isEqualTo(estateClient.id());
+        assertEquals(estateDoc.id(), estateSearch.documents().getFirst().id());
+        assertEquals(estateClient.id(), estateSearch.clients().getFirst().id());
     }
 
 
