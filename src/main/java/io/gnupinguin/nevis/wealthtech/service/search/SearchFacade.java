@@ -1,9 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.service.search;
 
-import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
-import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
-import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.ClientEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.SocialLinkEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.projection.ClientSearchProjection;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchService;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchService;
@@ -93,12 +93,12 @@ public class SearchFacade {
         }
     }
 
-    private @NonNull List<ClientSearchResult> hydrateClients(List<ClientSearchEntity> searchResults) {
+    private @NonNull List<ClientSearchResult> hydrateClients(List<ClientSearchProjection> searchResults) {
         if (searchResults.isEmpty()) {
             return List.of();
         }
 
-        var clientIds = searchResults.stream().map(ClientSearchEntity::id).toList();
+        var clientIds = searchResults.stream().map(ClientSearchProjection::id).toList();
         var clientEntities = clientRepository.findAllById(clientIds);
         var clientsById = StreamSupport.stream(clientEntities.spliterator(), false)
                 .collect(Collectors.toMap(ClientEntity::id, client -> client));
@@ -117,7 +117,7 @@ public class SearchFacade {
 
     private static @NonNull ClientSearchResult toClientSearchResult(@NonNull ClientEntity client, float score) {
         var socialLinks = client.socialLinks().stream()
-                .map(SocialLink::url)
+                .map(SocialLinkEntity::url)
                 .toList();
 
         return new ClientSearchResult(

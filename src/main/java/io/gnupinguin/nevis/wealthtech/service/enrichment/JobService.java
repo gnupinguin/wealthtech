@@ -1,6 +1,6 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment;
 
-import io.gnupinguin.nevis.wealthtech.persistence.JobType;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;

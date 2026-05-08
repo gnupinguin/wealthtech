@@ -1,9 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.service.search;
 
-import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
-import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
-import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.ClientEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.SocialLinkEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.projection.ClientSearchProjection;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchService;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchService;
@@ -99,7 +99,7 @@ class SearchFacadeTest {
                 0.87f
         );
 
-        when(clientSearchService.search("growth", 5)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.76f)));
+        when(clientSearchService.search("growth", 5)).thenReturn(List.of(new ClientSearchProjection(clientId, 0.76f)));
         when(documentSearchService.search("growth", 10)).thenReturn(List.of(document));
         when(clientRepository.findAllById(List.of(clientId))).thenThrow(new IllegalStateException("clients unavailable"));
 
@@ -120,10 +120,10 @@ class SearchFacadeTest {
                 "ada@example.com",
                 "Technology investor",
                 Instant.EPOCH,
-                Set.of(new SocialLink(UUID.randomUUID(), "https://example.com/ada", Instant.EPOCH))
+                Set.of(new SocialLinkEntity(UUID.randomUUID(), "https://example.com/ada", Instant.EPOCH))
         );
 
-        when(clientSearchService.search("technology", 5)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.92f)));
+        when(clientSearchService.search("technology", 5)).thenReturn(List.of(new ClientSearchProjection(clientId, 0.92f)));
         when(documentSearchService.search("technology", 10)).thenThrow(new IllegalStateException("document search failed"));
         when(clientRepository.findAllById(List.of(clientId))).thenReturn(List.of(client));
 

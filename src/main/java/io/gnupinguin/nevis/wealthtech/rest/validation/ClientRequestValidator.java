@@ -1,7 +1,7 @@
 package io.gnupinguin.nevis.wealthtech.rest.validation;
 
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
 import org.jspecify.annotations.Nullable;
 
 public interface ClientRequestValidator {

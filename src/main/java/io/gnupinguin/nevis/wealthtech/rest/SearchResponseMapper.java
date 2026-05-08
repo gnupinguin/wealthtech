@@ -1,8 +1,8 @@
 package io.gnupinguin.nevis.wealthtech.rest;
 
-import io.gnupinguin.nevis.wealthtech.rest.model.ClientSearchResponse;
-import io.gnupinguin.nevis.wealthtech.rest.model.DocumentSearchResponse;
-import io.gnupinguin.nevis.wealthtech.rest.model.SearchResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.ClientSearchResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.DocumentSearchResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.SearchResponse;
 import io.gnupinguin.nevis.wealthtech.service.search.SearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchResult;

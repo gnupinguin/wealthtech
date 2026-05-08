@@ -1,11 +1,11 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment.processor;
 
-import io.gnupinguin.nevis.wealthtech.model.DocumentChunk;
-import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.DocumentEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.JobType;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentChunkRepository;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentRepository;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentChunkEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentChunkRepository;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.ai.document.Document;
@@ -60,10 +60,10 @@ public class ChunkingJobProcessor implements DocumentEnrichmentJobProcessor {
                 .toList();
     }
 
-    private static @NonNull List<DocumentChunk> createChunks(@NonNull DocumentEnrichmentJobEntity job, @NonNull EmbeddingResponse response, @NonNull List<String> texts) {
+    private static @NonNull List<DocumentChunkEntity> createChunks(@NonNull DocumentEnrichmentJobEntity job, @NonNull EmbeddingResponse response, @NonNull List<String> texts) {
         var now = Instant.now();
         return response.getResults().stream()
-                .map(embedding -> new DocumentChunk(null, job.documentId(), embedding.getIndex(), texts.get(embedding.getIndex()), embedding.getOutput(), now))
+                .map(embedding -> new DocumentChunkEntity(null, job.documentId(), embedding.getIndex(), texts.get(embedding.getIndex()), embedding.getOutput(), now))
                 .toList();
     }
 

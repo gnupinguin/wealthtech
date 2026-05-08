@@ -1,7 +1,8 @@
 package io.gnupinguin.nevis.wealthtech.service.search.document;
 
-import io.gnupinguin.nevis.wealthtech.repository.DocumentChunkSearchRepository;
-import io.gnupinguin.nevis.wealthtech.repository.SqlQueryHelper;
+import io.gnupinguin.nevis.wealthtech.persistence.projection.DocumentSearchProjection;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentChunkSearchRepository;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.SqlQueryHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -26,7 +27,7 @@ public class SemanticDocumentSearchService implements DocumentSearchService {
                 .toList();
     }
 
-    private static @NonNull DocumentSearchResult toResult(@NonNull DocumentSearchEntity entity) {
+    private static @NonNull DocumentSearchResult toResult(@NonNull DocumentSearchProjection entity) {
         return new DocumentSearchResult(
                 entity.id(),
                 entity.clientId(),

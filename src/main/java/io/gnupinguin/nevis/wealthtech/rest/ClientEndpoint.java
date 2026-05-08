@@ -1,12 +1,12 @@
 package io.gnupinguin.nevis.wealthtech.rest;
 
-import io.gnupinguin.nevis.wealthtech.rest.model.Client;
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.rest.model.Document;
+import io.gnupinguin.nevis.wealthtech.rest.dto.ClientResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.DocumentResponse;
 import io.gnupinguin.nevis.wealthtech.rest.validation.ClientRequestValidator;
-import io.gnupinguin.nevis.wealthtech.service.access.ClientService;
-import io.gnupinguin.nevis.wealthtech.service.access.DocumentService;
+import io.gnupinguin.nevis.wealthtech.service.client.ClientService;
+import io.gnupinguin.nevis.wealthtech.service.document.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,29 +25,29 @@ public class ClientEndpoint {
     private final ClientRequestValidator clientRequestValidator;
 
     @GetMapping("/clients/{clientId}")
-    public Client getClient(@PathVariable UUID clientId) {
+    public ClientResponse getClient(@PathVariable UUID clientId) {
         return clientService.getClient(clientId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + clientId));
     }
 
     @PostMapping("/clients")
     @ResponseStatus(HttpStatus.CREATED)
-    public Client createClient(@RequestBody CreateClientRequest request) {
+    public ClientResponse createClient(@RequestBody CreateClientRequest request) {
         log.info("Create new client request: {}", request);
         clientRequestValidator.validateCreateClient(request);
         return clientService.createClient(request);
     }
 
     @GetMapping("/clients/{clientId}/documents/{documentId}")
-    public Document getClientDocument(@PathVariable UUID clientId, @PathVariable UUID documentId) {
+    public DocumentResponse getClientDocument(@PathVariable UUID clientId, @PathVariable UUID documentId) {
         return documentService.getClientDocument(clientId, documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
     }
 
     @PostMapping("/clients/{clientId}/documents")
     @ResponseStatus(HttpStatus.CREATED)
-    public Document createDocument(@PathVariable UUID clientId,
-                                   @RequestBody CreateDocumentRequest request) {
+    public DocumentResponse createDocument(@PathVariable UUID clientId,
+                                           @RequestBody CreateDocumentRequest request) {
         log.info("Create new document request: {}", request);
         clientRequestValidator.validateCreateDocument(request);
         return documentService.createDocument(clientId, request);

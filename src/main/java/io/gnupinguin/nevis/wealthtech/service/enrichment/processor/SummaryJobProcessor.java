@@ -1,7 +1,7 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment.processor;
 
-import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.JobType;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

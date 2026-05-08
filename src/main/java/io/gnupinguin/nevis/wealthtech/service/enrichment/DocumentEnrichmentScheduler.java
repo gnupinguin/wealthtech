@@ -1,9 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment;
 
-import io.gnupinguin.nevis.wealthtech.persistence.DocumentEnrichmentJobEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.JobStatus;
-import io.gnupinguin.nevis.wealthtech.persistence.JobType;
-import io.gnupinguin.nevis.wealthtech.repository.DocumentEnrichmentJobRepository;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.JobStatus;
+import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
+import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentEnrichmentJobRepository;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.processor.DocumentEnrichmentJobProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

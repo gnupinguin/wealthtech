@@ -1,6 +1,6 @@
 package io.gnupinguin.nevis.wealthtech.rest;
 
-import io.gnupinguin.nevis.wealthtech.rest.model.SearchResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.SearchResponse;
 import io.gnupinguin.nevis.wealthtech.rest.validation.SearchRequestValidator;
 import io.gnupinguin.nevis.wealthtech.service.search.SearchFacade;
 import lombok.RequiredArgsConstructor;
