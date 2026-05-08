@@ -66,9 +66,13 @@ tasks.named<Test>("test") {
     }
 }
 
+val testSourceSet = sourceSets.named("test")
+
 tasks.register<Test>("integrationTest") {
     description = "Runs integration tests."
     group = "verification"
+    testClassesDirs = testSourceSet.get().output.classesDirs
+    classpath = testSourceSet.get().runtimeClasspath
     useJUnitPlatform {
         includeTags("integration")
     }
@@ -78,6 +82,8 @@ tasks.register<Test>("integrationTest") {
 tasks.register<Test>("e2eTest") {
     description = "Runs end-to-end tests against real external services."
     group = "verification"
+    testClassesDirs = testSourceSet.get().output.classesDirs
+    classpath = testSourceSet.get().runtimeClasspath
     useJUnitPlatform {
         includeTags("e2e")
     }

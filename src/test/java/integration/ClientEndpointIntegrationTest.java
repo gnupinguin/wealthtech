@@ -94,6 +94,51 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testCreateClientWithMissingRequiredFieldReturns400() {
+        var request = new CreateClientRequest(
+                null,
+                "Doe",
+                "jane.doe@example.com",
+                "Wealth management client",
+                null
+        );
+
+        var response = restTemplate.postForEntity("/clients", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCreateClientWithInvalidEmailReturns400() {
+        var request = new CreateClientRequest(
+                "Jane",
+                "Doe",
+                "not-email",
+                "Wealth management client",
+                null
+        );
+
+        var response = restTemplate.postForEntity("/clients", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCreateClientWithBlankSocialLinkReturns400() {
+        var request = new CreateClientRequest(
+                "Jane",
+                "Doe",
+                "jane.doe@example.com",
+                "Wealth management client",
+                List.of(new SocialLinkRequest(" "))
+        );
+
+        var response = restTemplate.postForEntity("/clients", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
     void testCreateDocumentForExistingClientReturns201AndDocument() {
         var client = createClient("Bob", "Jones", "bob.jones@example.com");
         var request = new CreateDocumentRequest("Investment Policy", "This is the investment policy content.");
@@ -111,6 +156,30 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
         assertEquals("This is the investment policy content.", document.content());
         assertThat(document.summary()).isNull();
         assertThat(document.createdAt()).isNotNull();
+    }
+
+    @Test
+    void testCreateDocumentWithMissingTitleReturns400() {
+        var client = createClient("Bob", "Jones", "bob.jones@example.com");
+        var request = new CreateDocumentRequest(" ", "This is the investment policy content.");
+
+        var response = restTemplate.postForEntity(
+                "/clients/{id}/documents", request, String.class, client.id()
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCreateDocumentWithMissingContentReturns400() {
+        var client = createClient("Bob", "Jones", "bob.jones@example.com");
+        var request = new CreateDocumentRequest("Investment Policy", null);
+
+        var response = restTemplate.postForEntity(
+                "/clients/{id}/documents", request, String.class, client.id()
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test

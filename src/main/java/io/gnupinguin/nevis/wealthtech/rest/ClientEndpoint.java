@@ -4,6 +4,7 @@ import io.gnupinguin.nevis.wealthtech.rest.model.Client;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.rest.model.Document;
+import io.gnupinguin.nevis.wealthtech.rest.validation.ClientRequestValidator;
 import io.gnupinguin.nevis.wealthtech.service.access.ClientService;
 import io.gnupinguin.nevis.wealthtech.service.access.DocumentService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class ClientEndpoint {
 
     private final ClientService clientService;
     private final DocumentService documentService;
+    private final ClientRequestValidator clientRequestValidator;
 
     @GetMapping("/clients/{clientId}")
     public Client getClient(@PathVariable UUID clientId) {
@@ -32,6 +34,7 @@ public class ClientEndpoint {
     @ResponseStatus(HttpStatus.CREATED)
     public Client createClient(@RequestBody CreateClientRequest request) {
         log.info("Create new client request: {}", request);
+        clientRequestValidator.validateCreateClient(request);
         return clientService.createClient(request);
     }
 
@@ -46,6 +49,7 @@ public class ClientEndpoint {
     public Document createDocument(@PathVariable UUID clientId,
                                    @RequestBody CreateDocumentRequest request) {
         log.info("Create new document request: {}", request);
+        clientRequestValidator.validateCreateDocument(request);
         return documentService.createDocument(clientId, request);
     }
 

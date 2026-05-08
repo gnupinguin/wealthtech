@@ -17,7 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class SearchEndpointIntegrationTest extends AbstractIntegrationTest {
 
@@ -40,7 +40,7 @@ class SearchEndpointIntegrationTest extends AbstractIntegrationTest {
                 0.91f
         );
 
-        when(clientSearchService.search("growth", 10)).thenThrow(new IllegalStateException("clients unavailable"));
+        when(clientSearchService.search("growth", 5)).thenThrow(new IllegalStateException("clients unavailable"));
         when(documentSearchService.search("growth", 10)).thenReturn(List.of(document));
 
         var response = restTemplate.getForEntity("/search?q=growth", SearchResponse.class);
@@ -65,7 +65,7 @@ class SearchEndpointIntegrationTest extends AbstractIntegrationTest {
     void testSearchReturnsClientsAndErrorWhenDocumentsUnavailable() {
         var client = createClient();
 
-        when(clientSearchService.search("technology", 10)).thenReturn(List.of(new ClientSearchEntity(client.id(), 0.87f)));
+        when(clientSearchService.search("technology", 5)).thenReturn(List.of(new ClientSearchEntity(client.id(), 0.87f)));
         when(documentSearchService.search("technology", 10)).thenThrow(new IllegalStateException("documents unavailable"));
 
         var response = restTemplate.getForEntity("/search?q=technology", SearchResponse.class);
@@ -88,13 +88,75 @@ class SearchEndpointIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testSearchRejectsShortQuery() {
+        var response = restTemplate.getForEntity("/search?q=ab", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(clientSearchService, documentSearchService);
+    }
+
+    @Test
+    void testSearchRejectsLongQuery() {
+        var response = restTemplate.getForEntity("/search?q=" + "a".repeat(128), String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(clientSearchService, documentSearchService);
+    }
+
+    @Test
+    void testSearchRejectsClientLimitAboveMaximum() {
+        var response = restTemplate.getForEntity(
+                "/search?q=balanced&clientLimit=21", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(clientSearchService, documentSearchService);
+    }
+
+    @Test
+    void testSearchRejectsDocumentLimitAboveMaximum() {
+        var response = restTemplate.getForEntity(
+                "/search?q=balanced&documentLimit=51", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(clientSearchService, documentSearchService);
+    }
+
+    @Test
+    void testSearchRejectsLimitBelowMinimum() {
+        var response = restTemplate.getForEntity(
+                "/search?q=balanced&clientLimit=0", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(clientSearchService, documentSearchService);
+    }
+
+    @Test
     void testSearchReturnsServiceUnavailableWhenClientsAndDocumentsUnavailable() {
-        when(clientSearchService.search("growth", 10)).thenThrow(new IllegalStateException("clients unavailable"));
+        when(clientSearchService.search("growth", 5)).thenThrow(new IllegalStateException("clients unavailable"));
         when(documentSearchService.search("growth", 10)).thenThrow(new IllegalStateException("documents unavailable"));
 
         var response = restTemplate.getForEntity("/search?q=growth", String.class);
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+    }
+
+    @Test
+    void testSearchUsesClientAndDocumentLimits() {
+        when(clientSearchService.search("balanced", 2)).thenReturn(List.of());
+        when(documentSearchService.search("balanced", 3)).thenReturn(List.of());
+
+        var response = restTemplate.getForEntity(
+                "/search?q=balanced&clientLimit=2&documentLimit=3", SearchResponse.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        var body = response.getBody();
+        assertThat(body).isNotNull();
+        assertEquals("balanced", body.query());
+        assertThat(body.clients()).isEmpty();
+        assertThat(body.documents()).isEmpty();
+        assertThat(body.errors()).isEmpty();
+        verify(clientSearchService).search("balanced", 2);
+        verify(documentSearchService).search("balanced", 3);
     }
 
     private Client createClient() {

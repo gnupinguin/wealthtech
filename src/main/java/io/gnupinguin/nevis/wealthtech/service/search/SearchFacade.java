@@ -27,7 +27,8 @@ import java.util.stream.StreamSupport;
 @Component
 public class SearchFacade {
 
-    private static final int DEFAULT_LIMIT = 10;
+    private static final int DEFAULT_CLIENT_LIMIT = 5;
+    private static final int DEFAULT_DOCUMENT_LIMIT = 10;
     private static final String CLIENT_RESULTS_UNAVAILABLE = "Client results are unavailable";
     private static final String DOCUMENT_RESULTS_UNAVAILABLE = "Document results are unavailable";
 
@@ -48,8 +49,12 @@ public class SearchFacade {
     }
 
     public @NonNull SearchResult search(@NonNull String query) {
-        var clientFuture = runAsync(10_000, () -> clientSearchService.search(query, DEFAULT_LIMIT));
-        var documentFuture = runAsync(30_000, () -> documentSearchService.search(query, DEFAULT_LIMIT));
+        return search(query, DEFAULT_CLIENT_LIMIT, DEFAULT_DOCUMENT_LIMIT);
+    }
+
+    public @NonNull SearchResult search(@NonNull String query, int clientLimit, int documentLimit) {
+        var clientFuture = runAsync(10_000, () -> clientSearchService.search(query, clientLimit));
+        var documentFuture = runAsync(30_000, () -> documentSearchService.search(query, documentLimit));
 
         CompletableFuture.allOf(clientFuture, documentFuture).exceptionally(e -> null).join();
 

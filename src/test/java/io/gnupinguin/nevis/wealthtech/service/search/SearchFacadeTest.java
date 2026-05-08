@@ -55,6 +55,18 @@ class SearchFacadeTest {
     }
 
     @Test
+    void testUsesClientAndDocumentLimits() {
+        when(clientSearchService.search("growth", 2)).thenReturn(List.of());
+        when(documentSearchService.search("growth", 3)).thenReturn(List.of());
+
+        var result = facade.search("growth", 2, 3);
+
+        assertThat(result.clients()).isEmpty();
+        assertThat(result.documents()).isEmpty();
+        assertThat(result.errors()).isEmpty();
+    }
+
+    @Test
     void testReturnsDocumentsWithErrorWhenClientSearchFails() {
         var document = new DocumentSearchResult(
                 UUID.randomUUID(),
@@ -65,7 +77,7 @@ class SearchFacadeTest {
                 0.87f
         );
 
-        when(clientSearchService.search("growth", 10)).thenThrow(new IllegalStateException("client search failed"));
+        when(clientSearchService.search("growth", 5)).thenThrow(new IllegalStateException("client search failed"));
         when(documentSearchService.search("growth", 10)).thenReturn(List.of(document));
 
         var result = facade.search("growth");
@@ -87,7 +99,7 @@ class SearchFacadeTest {
                 0.87f
         );
 
-        when(clientSearchService.search("growth", 10)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.76f)));
+        when(clientSearchService.search("growth", 5)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.76f)));
         when(documentSearchService.search("growth", 10)).thenReturn(List.of(document));
         when(clientRepository.findAllById(List.of(clientId))).thenThrow(new IllegalStateException("clients unavailable"));
 
@@ -111,7 +123,7 @@ class SearchFacadeTest {
                 Set.of(new SocialLink(UUID.randomUUID(), "https://example.com/ada", Instant.EPOCH))
         );
 
-        when(clientSearchService.search("technology", 10)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.92f)));
+        when(clientSearchService.search("technology", 5)).thenReturn(List.of(new ClientSearchEntity(clientId, 0.92f)));
         when(documentSearchService.search("technology", 10)).thenThrow(new IllegalStateException("document search failed"));
         when(clientRepository.findAllById(List.of(clientId))).thenReturn(List.of(client));
 
@@ -129,7 +141,7 @@ class SearchFacadeTest {
 
     @Test
     void testThrowsServiceUnavailableWhenAllSearchesFail() {
-        when(clientSearchService.search("growth", 10)).thenThrow(new IllegalStateException("client search failed"));
+        when(clientSearchService.search("growth", 5)).thenThrow(new IllegalStateException("client search failed"));
         when(documentSearchService.search("growth", 10)).thenThrow(new IllegalStateException("document search failed"));
 
         var exception = assertThrows(ResponseStatusException.class, () -> facade.search("growth"));
