@@ -1,4 +1,4 @@
-package integration;
+package e2e;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import io.gnupinguin.nevis.wealthtech.rest.model.*;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         classes = WealthTechApplication.class
 )
 @ActiveProfiles("test")
-class SemanticSearchIntegrationTest {
+class SemanticSearchTest {
 
     @Container
     @ServiceConnection
@@ -116,7 +116,6 @@ class SemanticSearchIntegrationTest {
         assertThat(estateSearch.documents()).isNotEmpty();
         assertEquals(estateDoc.id(), estateSearch.documents().getFirst().id());
     }
-
 
     private Client createClient(String firstName, String lastName, String email) {
         var request = new CreateClientRequest(firstName, lastName, email, null, null);

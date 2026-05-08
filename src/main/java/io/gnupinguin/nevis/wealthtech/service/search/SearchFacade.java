@@ -28,6 +28,8 @@ import java.util.stream.StreamSupport;
 public class SearchFacade {
 
     private static final int DEFAULT_LIMIT = 10;
+    private static final String CLIENT_RESULTS_UNAVAILABLE = "Client results are unavailable";
+    private static final String DOCUMENT_RESULTS_UNAVAILABLE = "Document results are unavailable";
 
     private final ClientRepository clientRepository;
     private final ClientSearchService clientSearchService;
@@ -51,19 +53,39 @@ public class SearchFacade {
 
         CompletableFuture.allOf(clientFuture, documentFuture).exceptionally(e -> null).join();
 
-        if (clientFuture.isCompletedExceptionally()) {
+        var errors = new ArrayList<String>();
+        var clientResultsUnavailable = clientFuture.isCompletedExceptionally();
+        var documentResultsUnavailable = documentFuture.isCompletedExceptionally();
+        if (clientResultsUnavailable) {
             log.error("Client search failed", clientFuture.exceptionNow());
+            errors.add(CLIENT_RESULTS_UNAVAILABLE);
         }
-        if (documentFuture.isCompletedExceptionally()) {
+        if (documentResultsUnavailable) {
             log.error("Document search failed", documentFuture.exceptionNow());
+            errors.add(DOCUMENT_RESULTS_UNAVAILABLE);
         }
 
-        if (clientFuture.isCompletedExceptionally() && documentFuture.isCompletedExceptionally()) {
+        checkAvailability(clientResultsUnavailable, documentResultsUnavailable);
+
+        List<ClientSearchResult> clients = List.of();
+        if (!clientResultsUnavailable) {
+            try {
+                clients = hydrateClients(clientFuture.getNow(List.of()));
+            } catch (Exception e) {
+                log.error("Client hydration failed", e);
+                errors.add(CLIENT_RESULTS_UNAVAILABLE);
+                clientResultsUnavailable = true;
+            }
+        }
+
+        checkAvailability(clientResultsUnavailable, documentResultsUnavailable);
+        return new SearchResult(clients, searchResultsOrEmpty(documentFuture), List.copyOf(errors));
+    }
+
+    private static void checkAvailability(boolean clientResultsUnavailable, boolean documentResultsUnavailable) {
+        if (clientResultsUnavailable && documentResultsUnavailable) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Service is unavailable");
         }
-
-        var clients = hydrateClients(clientFuture.getNow(List.of()));
-        return new SearchResult(clients, documentFuture.getNow(List.of()));
     }
 
     private @NonNull List<ClientSearchResult> hydrateClients(List<ClientSearchEntity> searchResults) {
@@ -107,6 +129,13 @@ public class SearchFacade {
     private <T> @NonNull CompletableFuture<T> runAsync(long timeoutMillis, Supplier<T> search) {
         return CompletableFuture.supplyAsync(search, searchExecutor)
                 .orTimeout(timeoutMillis, TimeUnit.MILLISECONDS);
+    }
+
+    private static <T> @NonNull List<T> searchResultsOrEmpty(@NonNull CompletableFuture<List<T>> future) {
+        if (future.isCompletedExceptionally()) {
+            return List.of();
+        }
+        return future.getNow(List.of());
     }
 
 }

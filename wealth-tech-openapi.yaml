@@ -218,6 +218,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DocumentSearchResult"
+        errors:
+          type: array
+          description: Partial search errors. Empty when all search sources are available.
+          items:
+            type: string
 
     ClientSearchResult:
       type: object

@@ -5,5 +5,9 @@ import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchResu
 
 import java.util.List;
 
-public record SearchResult(List<ClientSearchResult> clients, List<DocumentSearchResult> documents) {
+public record SearchResult(
+        List<ClientSearchResult> clients,
+        List<DocumentSearchResult> documents,
+        List<String> errors
+) {
 }

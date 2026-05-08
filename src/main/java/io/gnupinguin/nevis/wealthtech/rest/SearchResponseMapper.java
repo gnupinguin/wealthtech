@@ -18,7 +18,7 @@ public class SearchResponseMapper {
         var clients = convertClients(result);
         var documents = convertDocuments(result);
 
-        return new SearchResponse(query, clients, documents, List.of());
+        return new SearchResponse(query, clients, documents, result.errors());
     }
 
     private static @NonNull List<DocumentSearchResponse> convertDocuments(@NonNull SearchResult result) {
