@@ -1,5 +1,6 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment;
 
+import io.gnupinguin.nevis.wealthtech.config.EnrichmentProperties;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
@@ -7,7 +8,6 @@ import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentEnrichmentJ
 import io.gnupinguin.nevis.wealthtech.service.enrichment.processor.DocumentEnrichmentJobProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -35,12 +35,12 @@ public class DocumentEnrichmentScheduler {
             DocumentEnrichmentJobRepository jobRepository,
             List<DocumentEnrichmentJobProcessor> processors,
             @Qualifier("enrichmentProcessorExecutor") ThreadPoolTaskExecutor processorExecutor,
-            @Value("${enrichment.processor.timeout-ms:30000}") long processorTimeoutMs) {
+            EnrichmentProperties enrichmentProperties) {
         this.jobRepository = jobRepository;
         this.processors = processors.stream()
                 .collect(Collectors.toMap(DocumentEnrichmentJobProcessor::type, Function.identity()));
         this.processorExecutor = processorExecutor;
-        this.processorTimeoutMs = processorTimeoutMs;
+        this.processorTimeoutMs = enrichmentProperties.processor().timeoutMs();
     }
 
     @Scheduled(fixedDelayString = "${enrichment.scheduler.fixed-delay-ms:5000}")

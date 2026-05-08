@@ -1,10 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.rest.validation;
 
+import io.gnupinguin.nevis.wealthtech.exception.BadRequestException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DefaultSearchRequestValidator implements SearchRequestValidator {
@@ -31,12 +30,12 @@ public class DefaultSearchRequestValidator implements SearchRequestValidator {
 
     private static void validateLimit(@NonNull String parameterName, int limit, int maxLimit) {
         if (limit < MIN_LIMIT || limit > maxLimit) {
-            throwBadRequest("%s must be between %d and %d".formatted(parameterName, DefaultSearchRequestValidator.MIN_LIMIT, maxLimit));
+            throwBadRequest("%s must be between %d and %d".formatted(parameterName, MIN_LIMIT, maxLimit));
         }
     }
 
     private static void throwBadRequest(@NonNull String reason) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
+        throw new BadRequestException(reason);
     }
 
 }

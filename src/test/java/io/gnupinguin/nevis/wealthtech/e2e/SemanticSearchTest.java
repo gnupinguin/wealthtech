@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = WealthTechApplication.class
 )
-@ActiveProfiles("test")
+@ActiveProfiles("integration")
 class SemanticSearchTest {
 
     @Container

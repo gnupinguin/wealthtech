@@ -21,3 +21,8 @@ enrichment:
   processor:
     pool-size: 4
     timeout-ms: 30000
+
+search:
+  pool-size: 4
+  client-timeout-ms: 5000
+  document-timeout-ms: 5000
