@@ -1,7 +1,11 @@
 package integration;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
-import io.gnupinguin.nevis.wealthtech.model.*;
+import io.gnupinguin.nevis.wealthtech.model.Client;
+import io.gnupinguin.nevis.wealthtech.model.Document;
+import io.gnupinguin.nevis.wealthtech.rest.model.CreateClientRequest;
+import io.gnupinguin.nevis.wealthtech.rest.model.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.model.SearchResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;

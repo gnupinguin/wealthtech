@@ -1,9 +1,9 @@
 package io.gnupinguin.nevis.wealthtech.service.search;
 
-import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
-import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchEntity;
+import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResult;
+import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchResult;
 
 import java.util.List;
 
-public record SearchResult(List<ScoredEntity<ClientEntity>> clients, List<DocumentSearchEntity> documents) {
+public record SearchResult(List<ClientSearchResult> clients, List<DocumentSearchResult> documents) {
 }

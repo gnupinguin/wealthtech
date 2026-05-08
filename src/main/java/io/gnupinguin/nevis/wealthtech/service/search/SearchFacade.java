@@ -1,8 +1,10 @@
 package io.gnupinguin.nevis.wealthtech.service.search;
 
 import io.gnupinguin.nevis.wealthtech.persistence.ClientEntity;
+import io.gnupinguin.nevis.wealthtech.persistence.SocialLink;
 import io.gnupinguin.nevis.wealthtech.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchEntity;
+import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchService;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,30 +62,46 @@ public class SearchFacade {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Service is unavailable");
         }
 
-        var scoredEntities = hydrateClients(clientFuture.getNow(List.of()));
-        return new SearchResult(scoredEntities, documentFuture.getNow(List.of()));
+        var clients = hydrateClients(clientFuture.getNow(List.of()));
+        return new SearchResult(clients, documentFuture.getNow(List.of()));
     }
 
-    private @NonNull List<ScoredEntity<ClientEntity>> hydrateClients(List<ClientSearchEntity> searchResults) {
+    private @NonNull List<ClientSearchResult> hydrateClients(List<ClientSearchEntity> searchResults) {
         if (searchResults.isEmpty()) {
             return List.of();
         }
 
         var clientIds = searchResults.stream().map(ClientSearchEntity::id).toList();
-        var clients = clientRepository.findAllById(clientIds);
-        var clientsById = StreamSupport.stream(clients.spliterator(), false)
+        var clientEntities = clientRepository.findAllById(clientIds);
+        var clientsById = StreamSupport.stream(clientEntities.spliterator(), false)
                 .collect(Collectors.toMap(ClientEntity::id, client -> client));
 
-        var scoredEntities = new ArrayList<ScoredEntity<ClientEntity>>();
+        var clients = new ArrayList<ClientSearchResult>();
         for (var result : searchResults) {
             var client = clientsById.get(result.id());
             if (client == null) {
                 log.warn("Client search returned missing client {}", result.id());
             } else {
-                scoredEntities.add(new ScoredEntity<>(client, result.score()));
+                clients.add(toClientSearchResult(client, result.score()));
             }
         }
-        return scoredEntities;
+        return clients;
+    }
+
+    private static @NonNull ClientSearchResult toClientSearchResult(@NonNull ClientEntity client, float score) {
+        var socialLinks = client.socialLinks().stream()
+                .map(SocialLink::url)
+                .toList();
+
+        return new ClientSearchResult(
+                client.id(),
+                client.firstName(),
+                client.lastName(),
+                client.email(),
+                client.description(),
+                socialLinks,
+                score
+        );
     }
 
     private <T> @NonNull CompletableFuture<T> runAsync(long timeoutMillis, Supplier<T> search) {

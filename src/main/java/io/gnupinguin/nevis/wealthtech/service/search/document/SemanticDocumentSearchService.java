@@ -19,9 +19,22 @@ public class SemanticDocumentSearchService implements DocumentSearchService {
     private final EmbeddingModel embeddingModel;
 
     @Override
-    public @NonNull List<DocumentSearchEntity> search(@NonNull String query, int limit) {
+    public @NonNull List<DocumentSearchResult> search(@NonNull String query, int limit) {
         var searchVector = embeddingModel.embed(query); // TODO wrap client errors
-        return repository.findSimilar(SqlQueryHelper.toVectorString(searchVector), limit);
+        return repository.findSimilar(SqlQueryHelper.toVectorString(searchVector), limit).stream()
+                .map(SemanticDocumentSearchService::toResult)
+                .toList();
+    }
+
+    private static @NonNull DocumentSearchResult toResult(@NonNull DocumentSearchEntity entity) {
+        return new DocumentSearchResult(
+                entity.id(),
+                entity.clientId(),
+                entity.title(),
+                entity.matchedChunk(),
+                entity.summary(),
+                entity.score()
+        );
     }
 
 }

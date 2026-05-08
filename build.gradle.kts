@@ -30,9 +30,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     runtimeOnly("org.postgresql:postgresql")
 
-//    implementation("org.springframework.ai:spring-ai-advisors-vector-store")
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
-//    implementation("org.springframework.ai:spring-ai-starter-vector-store-pgvector")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
@@ -64,7 +62,7 @@ tasks.withType<Test> {
 
 tasks.named<Test>("test") {
     useJUnitPlatform {
-        excludeTags("integration")
+        excludeTags("integration", "e2e")
     }
 }
 

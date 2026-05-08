@@ -1,16 +1,14 @@
-package io.gnupinguin.nevis.wealthtech.model;
+package io.gnupinguin.nevis.wealthtech.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.gnupinguin.nevis.wealthtech.model.SocialLinkRequest;
 
 import java.util.List;
-import java.util.UUID;
 
-public record ClientSearchResponse(
-        UUID id,
+public record CreateClientRequest(
         @JsonProperty("first_name") String firstName,
         @JsonProperty("last_name") String lastName,
         String email,
         String description,
-        @JsonProperty("social_links") List<String> socialLinks,
-        float score
+        @JsonProperty("social_links") List<SocialLinkRequest> socialLinks
 ) {}
