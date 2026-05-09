@@ -1,34 +1,23 @@
 package io.gnupinguin.nevis.wealthtech.config;
 
+import io.gnupinguin.nevis.wealthtech.concurrent.BoundedVirtualThreadExecutor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableConfigurationProperties({EnrichmentProperties.class, SearchProperties.class})
 public class ThreadPoolConfig {
 
     @Bean("enrichmentProcessorExecutor")
-    public ThreadPoolTaskExecutor enrichmentProcessorExecutor(EnrichmentProperties enrichmentProperties) {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(enrichmentProperties.processor().poolSize());
-        executor.setMaxPoolSize(enrichmentProperties.processor().poolSize());
-        executor.setThreadNamePrefix("enrichment-processor-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
+    public BoundedVirtualThreadExecutor enrichmentProcessorExecutor(@NonNull EnrichmentProperties enrichmentProperties) {
+        return new BoundedVirtualThreadExecutor("enrichment-processor-", enrichmentProperties.processor().poolSize());
     }
 
     @Bean("searchExecutor")
-    public ThreadPoolTaskExecutor searchExecutor(SearchProperties searchProperties) {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(searchProperties.poolSize());
-        executor.setMaxPoolSize(searchProperties.poolSize());
-        executor.setThreadNamePrefix("search-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.initialize();
-        return executor;
+    public BoundedVirtualThreadExecutor searchExecutor(@NonNull SearchProperties searchProperties) {
+        return new BoundedVirtualThreadExecutor("search-", searchProperties.poolSize());
     }
 
 }

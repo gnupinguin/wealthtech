@@ -1,6 +1,6 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment;
 
-import io.gnupinguin.nevis.wealthtech.config.EnrichmentProperties;
+import io.gnupinguin.nevis.wealthtech.concurrent.BoundedVirtualThreadExecutor;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -29,7 +29,7 @@ class DocumentEnrichmentJobDispatcherTest {
     private DocumentEnrichmentJobRepository jobRepository;
 
     @Mock
-    private ThreadPoolTaskExecutor processorExecutor;
+    private BoundedVirtualThreadExecutor processorExecutor;
 
     @Mock
     private DocumentEnrichmentJobProcessor chunkingProcessor;
@@ -40,17 +40,14 @@ class DocumentEnrichmentJobDispatcherTest {
 
     @BeforeEach
     void setUp() {
-        var enrichmentProperties = new EnrichmentProperties(
-                new EnrichmentProperties.Scheduler(5000L),
-                new EnrichmentProperties.Processor(2)
-        );
         when(chunkingProcessor.type()).thenReturn(JobType.CHUNKING);
+        lenient().when(processorExecutor.drainAvailableSlots()).thenReturn(2);
         lenient().doAnswer(invocation -> {
             invocation.<Runnable>getArgument(0).run();
             return null;
-        }).when(processorExecutor).execute(any(Runnable.class));
+        }).when(processorExecutor).executeReserved(any(Runnable.class));
         jobRunner = new DocumentEnrichmentJobRunner(jobRepository, List.of(chunkingProcessor));
-        dispatcher = new DocumentEnrichmentJobDispatcher(jobRepository, jobRunner, processorExecutor, enrichmentProperties);
+        dispatcher = new DocumentEnrichmentJobDispatcher(jobRepository, jobRunner, processorExecutor);
     }
 
     @Test
@@ -133,7 +130,7 @@ class DocumentEnrichmentJobDispatcherTest {
         dispatcher.dispatchNextJobs();
 
         verify(jobRepository).tryLockNextPendingJobs(2);
-        verify(processorExecutor, times(2)).execute(any(Runnable.class));
+        verify(processorExecutor, times(2)).executeReserved(any(Runnable.class));
         verify(chunkingProcessor).process(firstJob);
         verify(chunkingProcessor).process(secondJob);
         verify(jobRepository, times(2)).save(any(DocumentEnrichmentJobEntity.class));
@@ -141,14 +138,10 @@ class DocumentEnrichmentJobDispatcherTest {
 
     @Test
     void testDispatchNextJobsPullsOnlyFreeProcessorSlotCount() {
-        var enrichmentProperties = new EnrichmentProperties(
-                new EnrichmentProperties.Scheduler(5000L),
-                new EnrichmentProperties.Processor(2)
-        );
-        doNothing().when(processorExecutor).execute(any(Runnable.class));
-        dispatcher = new DocumentEnrichmentJobDispatcher(jobRepository, jobRunner, processorExecutor, enrichmentProperties);
+        doNothing().when(processorExecutor).executeReserved(any(Runnable.class));
 
         var job = pendingJob(JobType.CHUNKING, 0, 3);
+        when(processorExecutor.drainAvailableSlots()).thenReturn(2, 1);
         when(jobRepository.tryLockNextPendingJobs(2)).thenReturn(List.of(job));
         when(jobRepository.tryLockNextPendingJobs(1)).thenReturn(List.of());
 
@@ -157,7 +150,37 @@ class DocumentEnrichmentJobDispatcherTest {
 
         verify(jobRepository).tryLockNextPendingJobs(2);
         verify(jobRepository).tryLockNextPendingJobs(1);
-        verify(processorExecutor, times(1)).execute(any(Runnable.class));
+        verify(processorExecutor, times(1)).executeReserved(any(Runnable.class));
+    }
+
+    @Test
+    void testDispatchNextJobsDoesNotReleaseSlotAgainWhenSubmissionFails() {
+        var job = pendingJob(JobType.CHUNKING, 0, 3);
+        when(processorExecutor.drainAvailableSlots()).thenReturn(1);
+        when(jobRepository.tryLockNextPendingJobs(1)).thenReturn(List.of(job));
+        doThrow(new RuntimeException("executor closed")).when(processorExecutor).executeReserved(any(Runnable.class));
+
+        dispatcher.dispatchNextJobs();
+
+        verify(processorExecutor).executeReserved(any(Runnable.class));
+        verify(processorExecutor, never()).releaseSlots(anyInt());
+        verify(chunkingProcessor, never()).process(any());
+        var captor = ArgumentCaptor.forClass(DocumentEnrichmentJobEntity.class);
+        verify(jobRepository).save(captor.capture());
+        assertThat(captor.getValue().status()).isEqualTo(JobStatus.PENDING);
+        assertThat(captor.getValue().lastError()).isEqualTo("executor closed");
+    }
+
+    @Test
+    void testDispatchNextJobsReleasesReservedSlotsWhenLockingFails() {
+        when(jobRepository.tryLockNextPendingJobs(2)).thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> dispatcher.dispatchNextJobs())
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        verify(processorExecutor).releaseSlots(2);
+        verify(processorExecutor, never()).executeReserved(any(Runnable.class));
     }
 
     private static DocumentEnrichmentJobEntity pendingJob(JobType type, int attempts, int maxAttempts) {
