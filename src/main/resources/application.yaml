@@ -25,9 +25,9 @@ enrichment:
   scheduler:
     fixed-delay-ms: 1000
   processor:
-    pool-size: 4
+    pool-size: 16
 
 search:
-  pool-size: 4
+  pool-size: 16
   client-timeout-ms: 5000
   document-timeout-ms: 5000

@@ -1,12 +1,10 @@
 package io.gnupinguin.nevis.wealthtech.rest;
 
+import io.gnupinguin.nevis.wealthtech.exception.BadRequestException;
 import io.gnupinguin.nevis.wealthtech.rest.validation.DefaultSearchRequestValidator;
 import io.gnupinguin.nevis.wealthtech.rest.validation.SearchRequestValidator;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -43,9 +41,7 @@ class SearchRequestValidatorTest {
     }
 
     private static void assertBadRequest(Runnable request) {
-        var exception = assertThrows(ResponseStatusException.class, request::run);
-
-        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThrows(BadRequestException.class, request::run);
     }
 
 }

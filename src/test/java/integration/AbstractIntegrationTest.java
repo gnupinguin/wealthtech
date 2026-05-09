@@ -1,4 +1,4 @@
-package io.gnupinguin.nevis.wealthtech.integration;
+package integration;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import org.junit.jupiter.api.BeforeEach;

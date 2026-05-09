@@ -1,6 +1,7 @@
 package io.gnupinguin.nevis.wealthtech.service.search;
 
 import io.gnupinguin.nevis.wealthtech.config.SearchProperties;
+import io.gnupinguin.nevis.wealthtech.exception.ServiceUnavailableException;
 import io.gnupinguin.nevis.wealthtech.persistence.projection.ClientSearchProjection;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchResultHydrator;
@@ -12,12 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +39,9 @@ class SearchFacadeTest {
     @Mock
     private Executor searchExecutor;
 
+    @Mock
+    private SearchMetrics searchMetrics;
+
     private SearchFacade facade;
 
     @BeforeEach
@@ -49,12 +52,15 @@ class SearchFacadeTest {
                 documentSearchService,
                 clientSearchResultHydrator,
                 searchProperties,
+                searchMetrics,
                 searchExecutor
         );
         lenient().doAnswer(invocation -> {
             invocation.<Runnable>getArgument(0).run();
             return null;
         }).when(searchExecutor).execute(any(Runnable.class));
+        lenient().when(searchMetrics.recordClientSearch(any())).thenAnswer(invocation -> invocation.<Supplier<?>>getArgument(0).get());
+        lenient().when(searchMetrics.recordDocumentSearch(any())).thenAnswer(invocation -> invocation.<Supplier<?>>getArgument(0).get());
     }
 
     @Test
@@ -185,9 +191,8 @@ class SearchFacadeTest {
         when(clientSearchService.search("growth", 5)).thenThrow(new IllegalStateException("client search failed"));
         when(documentSearchService.search("growth", 10)).thenThrow(new IllegalStateException("document search failed"));
 
-        var exception = assertThrows(ResponseStatusException.class, () -> facade.search("growth", 5, 10));
-
-        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        var e = assertThrows(ServiceUnavailableException.class, () -> facade.search("growth", 5, 10));
+        assertThat(e).hasMessage("Service is unavailable");
     }
 
     @Test
@@ -200,9 +205,8 @@ class SearchFacadeTest {
         when(clientSearchResultHydrator.hydrate(List.of(clientSearchProjection)))
                 .thenThrow(new IllegalStateException("clients unavailable"));
 
-        var exception = assertThrows(ResponseStatusException.class, () -> facade.search("growth", 5, 10));
-
-        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        var e = assertThrows(ServiceUnavailableException.class, () -> facade.search("growth", 5, 10));
+        assertThat(e).hasMessage("Service is unavailable");
     }
 
     @Test
@@ -213,13 +217,13 @@ class SearchFacadeTest {
                 documentSearchService,
                 clientSearchResultHydrator,
                 searchProperties,
+                searchMetrics,
                 command -> {
                 }
         );
 
-        var exception = assertThrows(ResponseStatusException.class, () -> facade.search("growth", 5, 10));
-
-        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        var e = assertThrows(ServiceUnavailableException.class, () -> facade.search("growth", 5, 10));
+        assertThat(e).hasMessage("Service is unavailable");
     }
 
 }

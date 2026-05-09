@@ -29,6 +29,7 @@ public class SearchFacade {
     private final DocumentSearchService documentSearchService;
     private final ClientSearchResultHydrator clientSearchResultHydrator;
     private final SearchProperties searchProperties;
+    private final SearchMetrics searchMetrics;
 
     private final Executor searchExecutor;
 
@@ -36,22 +37,24 @@ public class SearchFacade {
                         DocumentSearchService documentSearchService,
                         ClientSearchResultHydrator clientSearchResultHydrator,
                         SearchProperties searchProperties,
+                        SearchMetrics searchMetrics,
                         @Qualifier("searchExecutor") Executor searchExecutor) {
         this.clientSearchService = clientSearchService;
         this.documentSearchService = documentSearchService;
         this.clientSearchResultHydrator = clientSearchResultHydrator;
         this.searchProperties = searchProperties;
+        this.searchMetrics = searchMetrics;
         this.searchExecutor = searchExecutor;
     }
 
     public @NonNull SearchResult search(@NonNull String query, int clientLimit, int documentLimit) {
         var clientFuture = runAsync(
                 searchProperties.clientTimeoutMs(),
-                () -> clientSearchService.search(query, clientLimit)
+                () -> searchMetrics.recordClientSearch(() -> clientSearchService.search(query, clientLimit))
         );
         var documentFuture = runAsync(
                 searchProperties.documentTimeoutMs(),
-                () -> documentSearchService.search(query, documentLimit)
+                () -> searchMetrics.recordDocumentSearch(() -> documentSearchService.search(query, documentLimit))
         );
 
         awaitAll(clientFuture, documentFuture);

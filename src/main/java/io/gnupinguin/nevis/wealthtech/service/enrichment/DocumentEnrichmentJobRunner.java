@@ -5,6 +5,7 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentEnrichmentJobRepository;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.processor.DocumentEnrichmentJobProcessor;
+import io.micrometer.core.instrument.Timer.Sample;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
@@ -21,13 +22,16 @@ public class DocumentEnrichmentJobRunner {
 
     private final DocumentEnrichmentJobRepository jobRepository;
     private final Map<JobType, DocumentEnrichmentJobProcessor> processors;
+    private final DocumentEnrichmentJobMetricsRecorder metricsRecorder;
 
     public DocumentEnrichmentJobRunner(
             @NonNull DocumentEnrichmentJobRepository jobRepository,
-            @NonNull List<DocumentEnrichmentJobProcessor> processors) {
+            @NonNull List<DocumentEnrichmentJobProcessor> processors,
+            @NonNull DocumentEnrichmentJobMetricsRecorder metricsRecorder) {
         this.jobRepository = jobRepository;
         this.processors = processors.stream()
                 .collect(Collectors.toMap(DocumentEnrichmentJobProcessor::type, Function.identity()));
+        this.metricsRecorder = metricsRecorder;
     }
 
     public void run(@NonNull DocumentEnrichmentJobEntity job) {
@@ -38,25 +42,29 @@ public class DocumentEnrichmentJobRunner {
             return;
         }
 
+        Sample sample = metricsRecorder.startSample();
         try {
             processor.process(job);
             jobRepository.save(completed(job));
+            metricsRecorder.recordCompleted(sample, job.type());
             log.info("Job {}/{} completed successfully", job.id(), job.type());
         } catch (RuntimeException e) {
             log.error("Job {}/{} failed: {}", job.id(), job.type(), errorMessage(e), e);
-            handleFailure(job, errorMessage(e));
+            handleFailure(job, errorMessage(e), sample);
         }
     }
 
     void failBeforeProcessing(@NonNull DocumentEnrichmentJobEntity job, @NonNull RuntimeException e) {
-        handleFailure(job, errorMessage(e));
+        handleFailure(job, errorMessage(e), metricsRecorder.startSample());
     }
 
-    private void handleFailure(@NonNull DocumentEnrichmentJobEntity job, @NonNull String error) {
+    private void handleFailure(@NonNull DocumentEnrichmentJobEntity job, @NonNull String error, @NonNull Sample sample) {
         if (job.attempts() >= job.maxAttempts()) {
             jobRepository.save(failed(job, error));
+            metricsRecorder.recordFailed(sample, job.type());
         } else {
             jobRepository.save(requeuedWithBackoff(job, error));
+            metricsRecorder.recordRequeued(sample, job.type());
         }
     }
 

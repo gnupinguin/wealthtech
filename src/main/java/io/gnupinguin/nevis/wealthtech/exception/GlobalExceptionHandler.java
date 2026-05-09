@@ -1,7 +1,5 @@
-package io.gnupinguin.nevis.wealthtech.rest;
+package io.gnupinguin.nevis.wealthtech.exception;
 
-import io.gnupinguin.nevis.wealthtech.exception.BadRequestException;
-import io.gnupinguin.nevis.wealthtech.exception.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;

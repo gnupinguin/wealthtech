@@ -1,4 +1,4 @@
-package io.gnupinguin.nevis.wealthtech.e2e;
+package e2e;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import io.gnupinguin.nevis.wealthtech.rest.dto.*;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = WealthTechApplication.class
 )
-@ActiveProfiles("integration")
+@ActiveProfiles("e2e")
 class SemanticSearchTest {
 
     @Container

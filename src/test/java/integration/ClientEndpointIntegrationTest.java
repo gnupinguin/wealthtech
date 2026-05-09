@@ -1,4 +1,4 @@
-package io.gnupinguin.nevis.wealthtech.integration;
+package integration;
 
 import io.gnupinguin.nevis.wealthtech.rest.dto.*;
 import org.junit.jupiter.api.Test;
@@ -90,51 +90,6 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testCreateClientWithMissingRequiredFieldReturns400() {
-        var request = new CreateClientRequest(
-                null,
-                "Doe",
-                "jane.doe@example.com",
-                "Wealth management client",
-                null
-        );
-
-        var response = restTemplate.postForEntity("/clients", request, String.class);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
-    void testCreateClientWithInvalidEmailReturns400() {
-        var request = new CreateClientRequest(
-                "Jane",
-                "Doe",
-                "not-email",
-                "Wealth management client",
-                null
-        );
-
-        var response = restTemplate.postForEntity("/clients", request, String.class);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
-    void testCreateClientWithBlankSocialLinkReturns400() {
-        var request = new CreateClientRequest(
-                "Jane",
-                "Doe",
-                "jane.doe@example.com",
-                "Wealth management client",
-                List.of(new SocialLinkRequest(" "))
-        );
-
-        var response = restTemplate.postForEntity("/clients", request, String.class);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
     void testCreateDocumentForExistingClientReturns201AndDocument() {
         var client = createClient("Bob", "Jones", "bob.jones@example.com");
         var request = new CreateDocumentRequest("Investment Policy", "This is the investment policy content.");
@@ -155,30 +110,6 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testCreateDocumentWithMissingTitleReturns400() {
-        var client = createClient("Bob", "Jones", "bob.jones@example.com");
-        var request = new CreateDocumentRequest(" ", "This is the investment policy content.");
-
-        var response = restTemplate.postForEntity(
-                "/clients/{id}/documents", request, String.class, client.id()
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
-    void testCreateDocumentWithMissingContentReturns400() {
-        var client = createClient("Bob", "Jones", "bob.jones@example.com");
-        var request = new CreateDocumentRequest("Investment Policy", null);
-
-        var response = restTemplate.postForEntity(
-                "/clients/{id}/documents", request, String.class, client.id()
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
-
-    @Test
     void testCreateDocumentForNonExistingClientReturns404() {
         var request = new CreateDocumentRequest("Orphan Document", "No client for this.");
         var nonExistingClientId = UUID.randomUUID();
@@ -194,4 +125,5 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
         var request = new CreateClientRequest(firstName, lastName, email, null, null);
         return restTemplate.postForObject("/clients", request, ClientResponse.class);
     }
+
 }

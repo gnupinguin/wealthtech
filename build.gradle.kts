@@ -45,6 +45,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 dependencyManagement {

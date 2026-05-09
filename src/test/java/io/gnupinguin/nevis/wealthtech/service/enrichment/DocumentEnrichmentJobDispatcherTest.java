@@ -6,6 +6,7 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.JobStatus;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentEnrichmentJobRepository;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.processor.DocumentEnrichmentJobProcessor;
+import io.micrometer.core.instrument.Timer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,9 @@ class DocumentEnrichmentJobDispatcherTest {
     @Mock
     private DocumentEnrichmentJobProcessor chunkingProcessor;
 
+    @Mock
+    private DocumentEnrichmentJobMetricsRecorder metricsRecorder;
+
     private DocumentEnrichmentJobRunner jobRunner;
 
     private DocumentEnrichmentJobDispatcher dispatcher;
@@ -46,7 +50,8 @@ class DocumentEnrichmentJobDispatcherTest {
             invocation.<Runnable>getArgument(0).run();
             return null;
         }).when(processorExecutor).executeReserved(any(Runnable.class));
-        jobRunner = new DocumentEnrichmentJobRunner(jobRepository, List.of(chunkingProcessor));
+        lenient().when(metricsRecorder.startSample()).thenReturn(Timer.start());
+        jobRunner = new DocumentEnrichmentJobRunner(jobRepository, List.of(chunkingProcessor), metricsRecorder);
         dispatcher = new DocumentEnrichmentJobDispatcher(jobRepository, jobRunner, processorExecutor);
     }
 
