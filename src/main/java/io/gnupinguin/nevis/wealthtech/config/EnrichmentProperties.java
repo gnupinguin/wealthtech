@@ -7,6 +7,6 @@ public record EnrichmentProperties(Scheduler scheduler, Processor processor) {
 
     public record Scheduler(long fixedDelayMs) { }
 
-    public record Processor(int poolSize, long timeoutMs) { }
+    public record Processor(int poolSize) { }
 
 }

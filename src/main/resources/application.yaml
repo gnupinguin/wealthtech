@@ -15,12 +15,17 @@ spring:
     password: wealthtech
     driver-class-name: org.postgresql.Driver
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
 enrichment:
   scheduler:
     fixed-delay-ms: 1000
   processor:
     pool-size: 4
-    timeout-ms: 30000
 
 search:
   pool-size: 4
