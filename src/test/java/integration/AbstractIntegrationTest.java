@@ -3,6 +3,11 @@ package integration;
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +26,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 @Tag("integration")
 @ActiveProfiles("integration")
 @Testcontainers
@@ -35,6 +45,9 @@ public abstract class AbstractIntegrationTest {
 
     @MockitoBean
     protected EmbeddingModel embeddingModel;
+
+    @MockitoBean
+    protected ChatModel chatModel;
 
     @Container
     @ServiceConnection
@@ -55,6 +68,12 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @BeforeEach
+    void stubSummaryGeneration() {
+        when(chatModel.call(any(Prompt.class)))
+                .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("Generated summary")))));
+    }
 
     @BeforeEach
     void setUp() {

@@ -8,7 +8,9 @@ spring:
         options:
           model: text-embedding-3-small
       chat:
-        enabled: false
+        enabled: true
+        options:
+          model: gpt-5-nano
   datasource:
     url: jdbc:postgresql://localhost:5432/wealthtech
     username: wealthtech
@@ -37,6 +39,9 @@ management:
         include: health,metrics
 
 enrichment:
+  summary:
+    model: gpt-5-nano
+    max-completion-tokens: 300
   scheduler:
     fixed-delay-ms: 1000
     batch-size: 100
