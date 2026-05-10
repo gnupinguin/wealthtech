@@ -19,7 +19,7 @@ repositories {
 }
 
 extra["springAiVersion"] = "2.0.0-M5"
-extra["testcontainersVersion"] = "1.20.4"
+extra["testcontainersVersion"] = "2.0.5"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web") {
@@ -43,8 +43,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-data-jdbc-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.kafka:spring-kafka-test")
-    testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testCompileOnly("org.projectlombok:lombok")

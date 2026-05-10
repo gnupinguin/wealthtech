@@ -1,14 +1,8 @@
-package integration;
+package e2e;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -17,32 +11,22 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import testsupport.SharedPostgresContainer;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-@Tag("integration")
-@ActiveProfiles("integration")
+@Tag("e2e")
 @EmbeddedKafka(
         partitions = 8,
-        topics = {"document-enrichment-events", "document-enrichment-events-dlt"})
+        topics = {"document-enrichment-events", "document-enrichment-events-dlt"},
+        bootstrapServersProperty = "spring.kafka.bootstrap-servers"
+)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = WealthTechApplication.class
 )
-public abstract class AbstractIntegrationTest {
-
-    @MockitoBean
-    protected EmbeddingModel embeddingModel;
-
-    @MockitoBean
-    protected ChatModel chatModel;
+@ActiveProfiles("e2e")
+abstract class AbstractE2eTest {
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
@@ -54,19 +38,13 @@ public abstract class AbstractIntegrationTest {
     @LocalServerPort
     private int port;
 
-    protected RestTemplate restTemplate;
-
     @Autowired
     private JdbcClient jdbcClient;
 
-    @BeforeEach
-    void stubSummaryGeneration() {
-        when(chatModel.call(any(Prompt.class)))
-                .thenReturn(new ChatResponse(List.of(new Generation(new AssistantMessage("Generated summary")))));
-    }
+    protected RestTemplate restTemplate;
 
     @BeforeEach
-    void setUp() {
+    void setUpRestTemplate() {
         restTemplate = new RestTemplate();
         restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:" + port));
         restTemplate.setErrorHandler(_ -> false);
@@ -78,5 +56,4 @@ public abstract class AbstractIntegrationTest {
         jdbcClient.sql("DELETE FROM client_social_links").update();
         jdbcClient.sql("DELETE FROM clients").update();
     }
-
 }

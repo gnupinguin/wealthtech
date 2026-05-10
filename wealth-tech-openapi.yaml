@@ -33,26 +33,6 @@ paths:
         "404":
           description: Client not found
 
-  /documents/{id}:
-    get:
-      summary: Get document by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Document found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Document"
-        "404":
-          description: Document not found
-
   /clients:
     post:
       summary: Create client
@@ -198,10 +178,25 @@ components:
           type: string
         description:
           type: string
+        created_at:
+          type: string
+          format: date-time
         social_links:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/SocialLink"
+
+    SocialLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
 
     CreateDocumentRequest:
       type: object
@@ -258,6 +253,18 @@ components:
         id:
           type: string
           format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        description:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
         score:
           type: number
           format: float
@@ -278,5 +285,5 @@ components:
           type: string
         summary:
           type: string
-        matched_text:
+        matched_chunk:
           type: string

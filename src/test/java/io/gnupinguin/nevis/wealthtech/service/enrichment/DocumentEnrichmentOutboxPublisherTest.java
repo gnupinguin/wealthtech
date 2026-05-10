@@ -46,7 +46,8 @@ class DocumentEnrichmentOutboxPublisherTest {
                         (short) 1,
                         new EnrichmentProperties.Producer(5000, 600000),
                         new EnrichmentProperties.Consumer(4, 3, 1000)
-                )
+                ),
+                null
         );
         publisher = new DocumentEnrichmentOutboxPublisher(repository, kafkaTemplate, properties);
     }

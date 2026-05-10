@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
-CREATE TABLE clients (
+CREATE TABLE IF NOT EXISTS clients (
                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                          first_name TEXT NOT NULL,
                          last_name TEXT NOT NULL,
@@ -10,14 +10,14 @@ CREATE TABLE clients (
                          created_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE client_social_links (
+CREATE TABLE IF NOT EXISTS client_social_links (
                                      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                      client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                                      url TEXT NOT NULL,
                                      created_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                            client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                            title TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE documents (
                            updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE document_chunks (
+CREATE TABLE IF NOT EXISTS document_chunks (
                                  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                  document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
                                  chunk_index INT NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE document_chunks (
                                      UNIQUE (document_id, chunk_index)
 );
 
-CREATE TABLE document_enrichment_outbox_events (
+CREATE TABLE IF NOT EXISTS document_enrichment_outbox_events (
                                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                                     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
                                                     type TEXT NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE document_enrichment_outbox_events (
                                                         UNIQUE (document_id, type)
 );
 
-CREATE TABLE document_enrichment_processed_events (
+CREATE TABLE IF NOT EXISTS document_enrichment_processed_events (
                                                       event_id UUID PRIMARY KEY,
                                                       document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
                                                       type TEXT NOT NULL,
@@ -72,36 +72,36 @@ CREATE TABLE document_enrichment_processed_events (
                                                           CHECK (type IN ('CHUNKING', 'SUMMARY'))
 );
 
-CREATE INDEX idx_clients_email_trgm
+CREATE INDEX IF NOT EXISTS idx_clients_email_trgm
     ON clients USING gin (email gin_trgm_ops);
 
-CREATE INDEX idx_clients_first_name_trgm
+CREATE INDEX IF NOT EXISTS idx_clients_first_name_trgm
     ON clients USING gin (first_name gin_trgm_ops);
 
-CREATE INDEX idx_clients_last_name_trgm
+CREATE INDEX IF NOT EXISTS idx_clients_last_name_trgm
     ON clients USING gin (last_name gin_trgm_ops);
 
-CREATE INDEX idx_clients_description_trgm
+CREATE INDEX IF NOT EXISTS idx_clients_description_trgm
     ON clients USING gin (description gin_trgm_ops);
 
-CREATE INDEX idx_client_social_links_client_id
+CREATE INDEX IF NOT EXISTS idx_client_social_links_client_id
     ON client_social_links (client_id);
 
-CREATE INDEX idx_documents_client_id
+CREATE INDEX IF NOT EXISTS idx_documents_client_id
     ON documents (client_id);
 
-CREATE INDEX idx_document_chunks_document_id
+CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id
     ON document_chunks (document_id);
 
-CREATE INDEX idx_document_chunks_embedding_hnsw
+CREATE INDEX IF NOT EXISTS idx_document_chunks_embedding_hnsw
     ON document_chunks
         USING hnsw (embedding vector_cosine_ops);
 
-CREATE INDEX idx_document_enrichment_outbox_events_publishable
+CREATE INDEX IF NOT EXISTS idx_document_enrichment_outbox_events_publishable
     ON document_enrichment_outbox_events (status, available_at, created_at);
 
-CREATE INDEX idx_document_enrichment_outbox_events_document_id
+CREATE INDEX IF NOT EXISTS idx_document_enrichment_outbox_events_document_id
     ON document_enrichment_outbox_events (document_id);
 
-CREATE INDEX idx_document_enrichment_processed_events_document_id
+CREATE INDEX IF NOT EXISTS idx_document_enrichment_processed_events_document_id
     ON document_enrichment_processed_events (document_id, type);
