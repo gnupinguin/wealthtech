@@ -5,15 +5,17 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.service.enrichment.JobService;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.EnrichmentEventService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +35,7 @@ class DocumentServiceImplTest {
     private DocumentRepository documentRepository;
 
     @Mock
-    private JobService jobService;
+    private EnrichmentEventService enrichmentEventService;
 
     @InjectMocks
     private DocumentServiceImpl documentService;
@@ -106,7 +108,7 @@ class DocumentServiceImplTest {
                 () -> documentService.createDocument(clientId, request));
 
         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        verifyNoInteractions(documentRepository, jobService);
+        verifyNoInteractions(documentRepository, enrichmentEventService);
     }
 
     @Test
@@ -121,14 +123,21 @@ class DocumentServiceImplTest {
         var result = documentService.createDocument(clientId, request);
 
         verify(documentRepository).save(any());
-        verify(jobService).publishJob(documentId, JobType.SUMMARY);
-        verify(jobService).publishJob(documentId, JobType.CHUNKING);
+        verify(enrichmentEventService).enqueueEvent(documentId, JobType.SUMMARY);
+        verify(enrichmentEventService).enqueueEvent(documentId, JobType.CHUNKING);
 
         assertThat(result.id()).isEqualTo(documentId);
         assertThat(result.clientId()).isEqualTo(clientId);
         assertThat(result.title()).isEqualTo("Title");
         assertThat(result.content()).isEqualTo("Content");
         assertThat(result.summary()).isNull();
+    }
+
+    @Test
+    void testCreateDocumentIsTransactionalSoDocumentAndOutboxEventsCommitTogether() throws NoSuchMethodException {
+        Method method = DocumentServiceImpl.class.getMethod("createDocument", UUID.class, CreateDocumentRequest.class);
+
+        assertThat(method.getAnnotation(Transactional.class)).isNotNull();
     }
 
 }

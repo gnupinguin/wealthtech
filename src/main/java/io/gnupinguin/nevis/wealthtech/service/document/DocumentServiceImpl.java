@@ -6,7 +6,7 @@ import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
 import io.gnupinguin.nevis.wealthtech.rest.dto.DocumentResponse;
-import io.gnupinguin.nevis.wealthtech.service.enrichment.JobService;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.EnrichmentEventService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final ClientRepository clientRepository;
     private final DocumentRepository documentRepository;
-    private final JobService jobService;
+    private final EnrichmentEventService enrichmentEventService;
 
     @Override
     public @NonNull Optional<DocumentResponse> getClientDocument(@NonNull UUID clientId, @NonNull UUID documentId) {
@@ -53,8 +53,8 @@ public class DocumentServiceImpl implements DocumentService {
                 now
         ));
 
-        jobService.publishJob(saved.id(), JobType.SUMMARY);
-        jobService.publishJob(saved.id(), JobType.CHUNKING);
+        enrichmentEventService.enqueueEvent(saved.id(), JobType.SUMMARY);
+        enrichmentEventService.enqueueEvent(saved.id(), JobType.CHUNKING);
 
         return new DocumentResponse(
                 saved.id(),

@@ -14,6 +14,21 @@ spring:
     username: wealthtech
     password: wealthtech
     driver-class-name: org.postgresql.Driver
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: wealthtech-document-enrichment
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: io.gnupinguin.nevis.wealthtech.service.enrichment
+        spring.json.value.default.type: io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent
 
 management:
   endpoints:
@@ -24,8 +39,19 @@ management:
 enrichment:
   scheduler:
     fixed-delay-ms: 1000
-  processor:
-    pool-size: 16
+    batch-size: 100
+  kafka:
+    topic: document-enrichment-events
+    dead-letter-topic: document-enrichment-events-dlt
+    partitions: 8
+    replication-factor: 1
+    producer:
+      send-timeout-ms: 5000
+      lock-timeout-ms: 600000
+    consumer:
+      concurrency: 4
+      retry-attempts: 3
+      retry-backoff-ms: 1000
 
 search:
   pool-size: 16

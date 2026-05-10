@@ -1,11 +1,11 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment.processor;
 
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentChunkEntity;
-import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentChunkRepository;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.ai.document.Document;
@@ -19,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class ChunkingJobProcessor implements DocumentEnrichmentJobProcessor {
+public class ChunkingJobProcessor implements DocumentEnrichmentProcessor {
 
     private final DocumentRepository documentRepository;
     private final EmbeddingModel embeddingModel;
@@ -41,35 +41,35 @@ public class ChunkingJobProcessor implements DocumentEnrichmentJobProcessor {
     }
 
     @Override
-    public void process(@NonNull DocumentEnrichmentJobEntity job) {
-        log.info("Processing CHUNKING job {} for document {}", job.id(), job.documentId());
-        var texts = splitDocumentContent(job);
+    public void process(@NonNull DocumentEnrichmentEvent event) {
+        log.info("Processing CHUNKING event {} for document {}", event.id(), event.documentId());
+        var texts = splitDocumentContent(event);
 
         EmbeddingResponse response = embeddingModel.embedForResponse(texts);
-        var chunks = createChunks(job, response, texts);
+        var chunks = createChunks(event, response, texts);
 
         chunkRepository.saveAll(chunks);
-        log.info("Stored {} chunks for document {}", texts.size(), job.documentId());
+        log.info("Stored {} chunks for document {}", texts.size(), event.documentId());
     }
 
-    private @NonNull List<String> splitDocumentContent(@NonNull DocumentEnrichmentJobEntity job) {
-        var document = getDocument(job);
+    private @NonNull List<String> splitDocumentContent(@NonNull DocumentEnrichmentEvent event) {
+        var document = getDocument(event);
         return splitter.apply(List.of(new Document(document.content())))
                 .stream()
                 .map(Document::getText)
                 .toList();
     }
 
-    private static @NonNull List<DocumentChunkEntity> createChunks(@NonNull DocumentEnrichmentJobEntity job, @NonNull EmbeddingResponse response, @NonNull List<String> texts) {
+    private static @NonNull List<DocumentChunkEntity> createChunks(@NonNull DocumentEnrichmentEvent event, @NonNull EmbeddingResponse response, @NonNull List<String> texts) {
         var now = Instant.now();
         return response.getResults().stream()
-                .map(embedding -> new DocumentChunkEntity(null, job.documentId(), embedding.getIndex(), texts.get(embedding.getIndex()), embedding.getOutput(), now))
+                .map(embedding -> new DocumentChunkEntity(null, event.documentId(), embedding.getIndex(), texts.get(embedding.getIndex()), embedding.getOutput(), now))
                 .toList();
     }
 
-    private @NonNull DocumentEntity getDocument(@NonNull DocumentEnrichmentJobEntity job) {
-        return documentRepository.findById(job.documentId())
-                .orElseThrow(() -> new IllegalStateException("Document not found: " + job.documentId()));
+    private @NonNull DocumentEntity getDocument(@NonNull DocumentEnrichmentEvent event) {
+        return documentRepository.findById(event.documentId())
+                .orElseThrow(() -> new IllegalStateException("Document not found: " + event.documentId()));
     }
 
 }

@@ -6,18 +6,17 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.time.Instant;
 import java.util.UUID;
 
-@Table("document_enrichment_jobs")
-public record DocumentEnrichmentJobEntity(
+@Table("document_enrichment_outbox_events")
+public record DocumentEnrichmentOutboxEventEntity(
         @Id UUID id,
         UUID documentId,
         JobType type,
-        JobStatus status,
+        OutboxEventStatus status,
         int attempts,
-        int maxAttempts,
         String lastError,
         Instant availableAt,
         Instant lockedAt,
-        Instant completedAt,
+        Instant publishedAt,
         Instant createdAt,
         Instant updatedAt
 ) {}

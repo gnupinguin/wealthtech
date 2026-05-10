@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +24,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Tag("integration")
 @ActiveProfiles("integration")
 @Testcontainers
+@EmbeddedKafka(
+        partitions = 8,
+        topics = {"document-enrichment-events", "document-enrichment-events-dlt"})
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = WealthTechApplication.class

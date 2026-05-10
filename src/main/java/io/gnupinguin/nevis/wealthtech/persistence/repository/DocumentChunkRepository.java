@@ -28,10 +28,15 @@ public class DocumentChunkRepository {
                         :documentId,
                         :chunkIndex,
                         :content,
-                        CAST(:embedding AS vector),
-                        :createdAt
-                    )
-            """;
+	                        CAST(:embedding AS vector),
+	                        :createdAt
+	                    )
+	                    ON CONFLICT (document_id, chunk_index)
+	                    DO UPDATE SET
+	                        content = EXCLUDED.content,
+	                        embedding = EXCLUDED.embedding,
+	                        created_at = EXCLUDED.created_at
+	            """;
 
     private final NamedParameterJdbcTemplate jdbc;
 

@@ -38,36 +38,6 @@ public class BoundedVirtualThreadExecutor implements Executor {
         });
     }
 
-    public void executeReserved(@NonNull Runnable command) {
-        try {
-            delegate.execute(() -> {
-                try {
-                    command.run();
-                } finally {
-                    releaseSlot();
-                }
-            });
-        } catch (RuntimeException e) {
-            releaseSlot();
-            throw e;
-        }
-    }
-
-    public int drainAvailableSlots() {
-        return slots.drainPermits();
-    }
-
-    public void releaseSlots(int permits) {
-        if (permits < 0) {
-            throw new IllegalArgumentException("Released slot count must not be negative");
-        }
-        if (permits == 0) {
-            return;
-        }
-
-        slots.release(permits);
-    }
-
     public int runningTasks() {
         return capacity - availableSlots();
     }

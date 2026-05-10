@@ -2,7 +2,6 @@ package e2e;
 
 import io.gnupinguin.nevis.wealthtech.WealthTechApplication;
 import io.gnupinguin.nevis.wealthtech.rest.dto.*;
-import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentJobDispatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -31,6 +31,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 @Tag("e2e")
 @Testcontainers
+@EmbeddedKafka(
+        partitions = 8,
+        topics = {"document-enrichment-events", "document-enrichment-events-dlt"},
+        bootstrapServersProperty = "spring.kafka.bootstrap-servers"
+)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = WealthTechApplication.class
@@ -59,9 +64,6 @@ class MultibatchDocumentResponseTest {
 
     @Autowired
     private JdbcClient jdbcClient;
-
-    @Autowired
-    private DocumentEnrichmentJobDispatcher jobDispatcher;
 
     private RestTemplate restTemplate;
 

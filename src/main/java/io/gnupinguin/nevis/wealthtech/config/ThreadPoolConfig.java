@@ -10,11 +10,6 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({EnrichmentProperties.class, SearchProperties.class})
 public class ThreadPoolConfig {
 
-    @Bean("enrichmentProcessorExecutor")
-    public BoundedVirtualThreadExecutor enrichmentProcessorExecutor(@NonNull EnrichmentProperties enrichmentProperties) {
-        return new BoundedVirtualThreadExecutor("enrichment-processor-", enrichmentProperties.processor().poolSize());
-    }
-
     @Bean("searchExecutor")
     public BoundedVirtualThreadExecutor searchExecutor(@NonNull SearchProperties searchProperties) {
         return new BoundedVirtualThreadExecutor("search-", searchProperties.poolSize());

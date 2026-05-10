@@ -1,13 +1,13 @@
 package io.gnupinguin.nevis.wealthtech.service.enrichment.processor;
 
-import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEnrichmentJobEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
+import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent;
 import org.jspecify.annotations.NonNull;
 
-public interface DocumentEnrichmentJobProcessor {
+public interface DocumentEnrichmentProcessor {
 
     @NonNull
     JobType type();
 
-    void process(@NonNull DocumentEnrichmentJobEntity job);
+    void process(@NonNull DocumentEnrichmentEvent event);
 }
