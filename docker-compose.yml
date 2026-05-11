@@ -6,11 +6,15 @@ services:
       POSTGRES_DB: wealthtech
       POSTGRES_USER: wealthtech
       POSTGRES_PASSWORD: wealthtech
+      POSTGRES_IMPORT_BACKUP_ENABLED: ${POSTGRES_IMPORT_BACKUP_ENABLED:-false}
+      POSTGRES_IMPORT_BACKUP: ${POSTGRES_IMPORT_BACKUP:-/backups/wealthtech_api_only_clients_documents_document_chunks.sql}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./docker/postgres/import-backup.sh:/docker-entrypoint-initdb.d/zz-import-backup.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U wealthtech -d wealthtech"]
       interval: 5s
@@ -46,6 +50,7 @@ services:
     container_name: wealthtech-app
     ports:
       - "8080:8080"
+      - "8081:8081"
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wealthtech

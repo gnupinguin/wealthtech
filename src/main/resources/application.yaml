@@ -40,6 +40,8 @@ spring:
         spring.json.value.default.type: io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent
 
 management:
+  server:
+    port: 8081
   endpoints:
     web:
       exposure:
@@ -61,7 +63,7 @@ enrichment:
       send-timeout-ms: 5000
       lock-timeout-ms: 600000
     consumer:
-      concurrency: 4
+      concurrency: 16
       retry-attempts: 3
       retry-backoff-ms: 1000
 

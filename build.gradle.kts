@@ -1,7 +1,7 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.6"
-    id("io.spring.dependency-management") version "1.1.7"
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
 }
 
 group = "io.gnupinguin.nevis"
@@ -18,8 +18,8 @@ repositories {
     mavenCentral()
 }
 
-extra["springAiVersion"] = "2.0.0-M5"
-extra["testcontainersVersion"] = "2.0.5"
+val springAiVersion: String by project
+val testcontainersVersion: String by project
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web") {
@@ -53,8 +53,8 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
-        mavenBom("org.testcontainers:testcontainers-bom:${property("testcontainersVersion")}")
+        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
+        mavenBom("org.testcontainers:testcontainers-bom:$testcontainersVersion")
     }
 }
 
