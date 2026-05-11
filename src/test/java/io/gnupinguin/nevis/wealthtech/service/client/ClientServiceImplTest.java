@@ -4,7 +4,6 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.ClientEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.SocialLinkEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.rest.dto.SocialLinkRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -45,10 +44,9 @@ class ClientServiceImplTest {
     @Test
     void testGetClientReturnsMappedResponseWhenClientExists() {
         var id = UUID.randomUUID();
-        var linkId = UUID.randomUUID();
         var now = Instant.EPOCH;
         var entity = new ClientEntity(id, "Ada", "Lovelace", "ada@example.com", "Investor", now,
-                Set.of(new SocialLinkEntity(linkId, "https://example.com/ada", now)));
+                Set.of(new SocialLinkEntity(UUID.randomUUID(), "https://example.com/ada", now)));
         when(clientRepository.findById(id)).thenReturn(Optional.of(entity));
 
         var result = clientService.getClient(id);
@@ -61,11 +59,7 @@ class ClientServiceImplTest {
             assertThat(client.email()).isEqualTo("ada@example.com");
             assertThat(client.description()).isEqualTo("Investor");
             assertThat(client.createdAt()).isEqualTo(now);
-            assertThat(client.socialLinks()).singleElement()
-                    .satisfies(link -> {
-                        assertThat(link.id()).isEqualTo(linkId);
-                        assertThat(link.url()).isEqualTo("https://example.com/ada");
-                    });
+            assertThat(client.socialLinks()).containsExactly("https://example.com/ada");
         });
     }
 
@@ -104,7 +98,7 @@ class ClientServiceImplTest {
     @Test
     void testCreateClientWithSocialLinksMapsLinksWithNullId() {
         var request = new CreateClientRequest("Ada", "Lovelace", "ada@example.com", "Investor",
-                List.of(new SocialLinkRequest("https://linkedin.com/ada")));
+                List.of("https://linkedin.com/ada"));
         var linkId = UUID.randomUUID();
         var savedEntity = new ClientEntity(UUID.randomUUID(), "Ada", "Lovelace", "ada@example.com", "Investor",
                 Instant.EPOCH, Set.of(new SocialLinkEntity(linkId, "https://linkedin.com/ada", Instant.EPOCH)));
@@ -119,8 +113,7 @@ class ClientServiceImplTest {
                     assertThat(link.id()).isNull();
                     assertThat(link.url()).isEqualTo("https://linkedin.com/ada");
                 });
-        assertThat(result.socialLinks()).singleElement()
-                .satisfies(link -> assertThat(link.url()).isEqualTo("https://linkedin.com/ada"));
+        assertThat(result.socialLinks()).containsExactly("https://linkedin.com/ada");
     }
 
 }

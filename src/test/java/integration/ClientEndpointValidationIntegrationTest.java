@@ -3,7 +3,6 @@ package integration;
 import io.gnupinguin.nevis.wealthtech.rest.dto.ClientResponse;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.rest.dto.SocialLinkRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -116,13 +115,13 @@ class ClientEndpointValidationIntegrationTest extends AbstractIntegrationTest {
                 "Doe",
                 "jane.doe@example.com",
                 "Wealth management client",
-                List.of(new SocialLinkRequest(" "))
+                List.of(" ")
         );
 
         var response = restTemplate.postForEntity("/clients", request, String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("social_links.url is required", response.getBody());
+        assertEquals("social_links entries must be non-blank", response.getBody());
     }
 
     @Test

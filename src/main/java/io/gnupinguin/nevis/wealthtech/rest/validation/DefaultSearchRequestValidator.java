@@ -17,8 +17,8 @@ public class DefaultSearchRequestValidator implements SearchRequestValidator {
     @Override
     public void validate(@Nullable String query, int clientLimit, int documentLimit) {
         validateQuery(query);
-        validateLimit("clientLimit", clientLimit, MAX_CLIENT_LIMIT);
-        validateLimit("documentLimit", documentLimit, MAX_DOCUMENT_LIMIT);
+        validateLimit("client_limit", clientLimit, MAX_CLIENT_LIMIT);
+        validateLimit("document_limit", documentLimit, MAX_DOCUMENT_LIMIT);
     }
 
     private static void validateQuery(@Nullable String query) {

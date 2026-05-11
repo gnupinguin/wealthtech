@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.gnupinguin.nevis"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.0"
 description = "WealthTech"
 
 java {

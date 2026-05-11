@@ -18,8 +18,8 @@ public class SearchEndpoint {
 
     @GetMapping("/search")
     public SearchResponse search(@RequestParam String q,
-                                 @RequestParam(defaultValue = "5") int clientLimit,
-                                 @RequestParam(defaultValue = "10") int documentLimit) {
+                                 @RequestParam(name = "client_limit", defaultValue = "5") int clientLimit,
+                                 @RequestParam(name = "document_limit", defaultValue = "10") int documentLimit) {
         searchRequestValidator.validate(q, clientLimit, documentLimit);
 
         var result = searchFacade.search(q, clientLimit, documentLimit);

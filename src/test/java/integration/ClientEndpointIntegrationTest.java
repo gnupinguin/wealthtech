@@ -1,6 +1,9 @@
 package integration;
 
-import io.gnupinguin.nevis.wealthtech.rest.dto.*;
+import io.gnupinguin.nevis.wealthtech.rest.dto.ClientResponse;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
+import io.gnupinguin.nevis.wealthtech.rest.dto.DocumentResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -20,8 +23,8 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
                 "jane.doe@example.com",
                 "Wealth management client",
                 List.of(
-                        new SocialLinkRequest("https://linkedin.com/in/janedoe"),
-                        new SocialLinkRequest("https://twitter.com/janedoe")
+                        "https://linkedin.com/in/janedoe",
+                        "https://twitter.com/janedoe"
                 )
         );
 
@@ -36,15 +39,8 @@ class ClientEndpointIntegrationTest extends AbstractIntegrationTest {
         assertEquals("jane.doe@example.com", client.email());
         assertEquals("Wealth management client", client.description());
         assertThat(client.createdAt()).isNotNull();
-        assertThat(client.socialLinks()).hasSize(2);
-        assertThat(client.socialLinks()).anySatisfy(s -> {
-            assertEquals("https://linkedin.com/in/janedoe", s.url());
-            assertThat(s.id()).isNotNull();
-            assertThat(s.createdAt()).isNotNull();
-        });
-        assertThat(client.socialLinks()).anySatisfy(s ->
-            assertEquals("https://twitter.com/janedoe", s.url())
-        );
+        assertThat(client.socialLinks())
+                .containsExactlyInAnyOrder("https://linkedin.com/in/janedoe", "https://twitter.com/janedoe");
     }
 
     @Test

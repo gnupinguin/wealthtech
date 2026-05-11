@@ -13,5 +13,5 @@ public record ClientResponse(
         String email,
         String description,
         @JsonProperty("created_at") Instant createdAt,
-        @JsonProperty("social_links") List<SocialLinkResponse> socialLinks
+        @JsonProperty("social_links") List<String> socialLinks
 ) {}

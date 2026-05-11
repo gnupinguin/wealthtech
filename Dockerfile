@@ -7,6 +7,7 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
+COPY gradle.properties .
 COPY e2e-tests/build.gradle.kts e2e-tests/build.gradle.kts
 
 RUN ./gradlew dependencies --no-daemon -q
@@ -30,6 +31,6 @@ ENV JAVA_OPTS="\
   -XX:+EnableDynamicAgentLoading \
   -Djava.net.preferIPv4Stack=true"
 
-EXPOSE 8080
+EXPOSE 8080 8081
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

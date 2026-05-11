@@ -52,7 +52,7 @@ services:
       - "8080:8080"
       - "8081:8081"
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY before starting the app}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wealthtech
       SPRING_DATASOURCE_USERNAME: wealthtech
       SPRING_DATASOURCE_PASSWORD: wealthtech

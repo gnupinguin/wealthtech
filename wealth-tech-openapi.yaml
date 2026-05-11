@@ -49,6 +49,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Client"
+        "400":
+          description: Invalid request body
 
   /clients/{clientId}/documents/{documentId}:
     get:
@@ -99,6 +101,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Document"
+        "400":
+          description: Invalid request body
+        "404":
+          description: Client not found
 
   /search:
     get:
@@ -111,7 +117,7 @@ paths:
             type: string
             minLength: 3
             maxLength: 127
-        - name: clientLimit
+        - name: client_limit
           in: query
           required: false
           schema:
@@ -119,7 +125,7 @@ paths:
             minimum: 1
             default: 5
             maximum: 20
-        - name: documentLimit
+        - name: document_limit
           in: query
           required: false
           schema:
@@ -134,6 +140,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SearchResponse"
+        "400":
+          description: Invalid query or limits
+        "503":
+          description: All search sources are unavailable
 
 components:
   schemas:
@@ -157,12 +167,8 @@ components:
         social_links:
           type: array
           items:
-            type: object
-            required: [url]
-            properties:
-              url:
-                type: string
-                minLength: 1
+            type: string
+            minLength: 1
 
     Client:
       type: object
@@ -184,19 +190,7 @@ components:
         social_links:
           type: array
           items:
-            $ref: "#/components/schemas/SocialLink"
-
-    SocialLink:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        url:
-          type: string
-        created_at:
-          type: string
-          format: date-time
+            type: string
 
     CreateDocumentRequest:
       type: object

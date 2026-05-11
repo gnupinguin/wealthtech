@@ -5,7 +5,6 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.SocialLinkEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.ClientRepository;
 import io.gnupinguin.nevis.wealthtech.rest.dto.ClientResponse;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
-import io.gnupinguin.nevis.wealthtech.rest.dto.SocialLinkResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -54,13 +53,13 @@ public class ClientServiceImpl implements ClientService {
 
     private static @NonNull Set<SocialLinkEntity> mapLinks(@NonNull CreateClientRequest request, Instant now) {
         return request.socialLinks().stream()
-                .map(r -> new SocialLinkEntity(null, r.url(), now))
+                .map(url -> new SocialLinkEntity(null, url, now))
                 .collect(Collectors.toSet());
     }
 
     private ClientResponse toClient(@NonNull ClientEntity client) {
         var socialLinks = client.socialLinks().stream()
-                .map(link -> new SocialLinkResponse(link.id(), link.url(), link.createdAt()))
+                .map(SocialLinkEntity::url)
                 .toList();
         return new ClientResponse(client.id(), client.firstName(), client.lastName(), client.email(), client.description(), client.createdAt(), socialLinks);
     }

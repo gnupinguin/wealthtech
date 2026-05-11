@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.net.HttpURLConnection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 
@@ -27,9 +26,7 @@ final class WealthTechApi {
         body.put("last_name", lastName);
         body.put("email", email);
         body.put("description", description);
-        body.put("social_links", socialLinks == null ? null : socialLinks.stream()
-                .map(url -> Map.of("url", url))
-                .toList());
+        body.put("social_links", socialLinks);
 
         var response = given()
                 .contentType(ContentType.JSON)
@@ -65,11 +62,11 @@ final class WealthTechApi {
     }
 
     Response search(String query, int clientLimit, int documentLimit) {
-        log.info("Searching query='{}', clientLimit={}, documentLimit={}", query, clientLimit, documentLimit);
+        log.info("Searching query='{}', client_limit={}, document_limit={}", query, clientLimit, documentLimit);
         var response = given()
                 .queryParam("q", query)
-                .queryParam("clientLimit", clientLimit)
-                .queryParam("documentLimit", documentLimit)
+                .queryParam("client_limit", clientLimit)
+                .queryParam("document_limit", documentLimit)
                 .when()
                 .get("/search")
                 .then()

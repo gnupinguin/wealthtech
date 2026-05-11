@@ -4,7 +4,6 @@ import io.gnupinguin.nevis.wealthtech.persistence.projection.ClientSearchProject
 import io.gnupinguin.nevis.wealthtech.rest.dto.ClientResponse;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.rest.dto.SearchResponse;
-import io.gnupinguin.nevis.wealthtech.rest.dto.SocialLinkRequest;
 import io.gnupinguin.nevis.wealthtech.service.search.client.ClientSearchService;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchResult;
 import io.gnupinguin.nevis.wealthtech.service.search.document.DocumentSearchService;
@@ -91,7 +90,7 @@ class SearchEndpointPartialResponseIntegrationTest extends AbstractIntegrationTe
                 "Lovelace",
                 "ada@example.com",
                 "Technology investor",
-                List.of(new SocialLinkRequest("https://example.com/ada"))
+                List.of("https://example.com/ada")
         );
         return restTemplate.postForObject("/clients", request, ClientResponse.class);
     }

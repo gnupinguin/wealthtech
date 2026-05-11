@@ -33,7 +33,7 @@ public class ClientSearchTest extends AbstractApiTest {
         var clientId = created.jsonPath().getString("id");
         assertThat(clientId).isNotBlank();
         assertThat(created.jsonPath().getString("last_name")).isEqualTo(lastName);
-        assertThat(created.jsonPath().getList("social_links.url", String.class)).containsExactly(socialLink);
+        assertThat(created.jsonPath().getList("social_links", String.class)).containsExactly(socialLink);
 
         log.info("Step: search for the created client by last name {}", lastName);
         var search = api.search(lastName, 5, 1);

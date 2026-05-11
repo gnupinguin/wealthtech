@@ -3,7 +3,6 @@ package io.gnupinguin.nevis.wealthtech.rest;
 import io.gnupinguin.nevis.wealthtech.exception.BadRequestException;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateClientRequest;
 import io.gnupinguin.nevis.wealthtech.rest.dto.CreateDocumentRequest;
-import io.gnupinguin.nevis.wealthtech.rest.dto.SocialLinkRequest;
 import io.gnupinguin.nevis.wealthtech.rest.validation.ClientRequestValidator;
 import io.gnupinguin.nevis.wealthtech.rest.validation.DefaultClientRequestValidator;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ class ClientRequestValidatorTest {
                 "Lovelace",
                 "ada@example.com",
                 "Technology investor",
-                List.of(new SocialLinkRequest("https://example.com/ada"))
+                List.of("https://example.com/ada")
         );
 
         assertDoesNotThrow(() -> validator.validateCreateClient(request));
@@ -58,10 +57,10 @@ class ClientRequestValidatorTest {
                 "Lovelace",
                 "ada@example.com",
                 null,
-                List.of(new SocialLinkRequest(" "))
+                List.of(" ")
         );
 
-        assertBadRequest(() -> validator.validateCreateClient(request), "social_links.url is required");
+        assertBadRequest(() -> validator.validateCreateClient(request), "social_links entries must be non-blank");
     }
 
     @Test

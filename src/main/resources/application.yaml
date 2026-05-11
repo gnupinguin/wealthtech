@@ -1,6 +1,8 @@
 spring:
   application:
     name: WealthTech
+  jackson:
+    default-property-inclusion: non_null
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
@@ -68,6 +70,6 @@ enrichment:
       retry-backoff-ms: 1000
 
 search:
-  pool-size: 16
+  pool-size: 32
   client-timeout-ms: 5000
   document-timeout-ms: 5000

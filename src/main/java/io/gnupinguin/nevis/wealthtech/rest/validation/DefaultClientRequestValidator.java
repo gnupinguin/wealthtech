@@ -46,8 +46,8 @@ public class DefaultClientRequestValidator implements ClientRequestValidator {
             return;
         }
         for (var socialLink : request.socialLinks()) {
-            if (socialLink == null || isBlank(socialLink.url())) {
-                throwBadRequest("social_links.url is required");
+            if (isBlank(socialLink)) {
+                throwBadRequest("social_links entries must be non-blank");
             }
         }
     }

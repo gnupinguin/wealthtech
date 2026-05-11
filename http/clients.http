@@ -8,10 +8,7 @@ Content-Type: application/json
   "email": "john.doe@example.com",
   "description": "High net worth individual interested in tech stocks and real estate.",
   "social_links": [
-    {
-      "platform": "LinkedIn",
-      "url": "https://linkedin.com/in/johndoe"
-    }
+    "https://linkedin.com/in/johndoe"
   ]
 }
 

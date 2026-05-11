@@ -38,7 +38,7 @@ class SearchEndpointIntegrationTest extends AbstractIntegrationTest {
         when(documentSearchService.search("balanced", 3)).thenReturn(List.of());
 
         var response = restTemplate.getForEntity(
-                "/search?q=balanced&clientLimit=2&documentLimit=3", SearchResponse.class);
+                "/search?q=balanced&client_limit=2&document_limit=3", SearchResponse.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         var body = response.getBody();

@@ -55,40 +55,40 @@ class SearchEndpointValidationIntegrationTest extends AbstractIntegrationTest {
     @Test
     void testSearchRejectsClientLimitAboveMaximum() {
         var response = restTemplate.getForEntity(
-                "/search?q=balanced&clientLimit=21", String.class);
+                "/search?q=balanced&client_limit=21", String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("clientLimit must be between 1 and 20", response.getBody());
+        assertEquals("client_limit must be between 1 and 20", response.getBody());
         verifyNoInteractions(clientSearchService, documentSearchService);
     }
 
     @Test
     void testSearchRejectsClientLimitBelowMinimum() {
         var response = restTemplate.getForEntity(
-                "/search?q=balanced&clientLimit=0", String.class);
+                "/search?q=balanced&client_limit=0", String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("clientLimit must be between 1 and 20", response.getBody());
+        assertEquals("client_limit must be between 1 and 20", response.getBody());
         verifyNoInteractions(clientSearchService, documentSearchService);
     }
 
     @Test
     void testSearchRejectsDocumentLimitAboveMaximum() {
         var response = restTemplate.getForEntity(
-                "/search?q=balanced&documentLimit=51", String.class);
+                "/search?q=balanced&document_limit=51", String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("documentLimit must be between 1 and 50", response.getBody());
+        assertEquals("document_limit must be between 1 and 50", response.getBody());
         verifyNoInteractions(clientSearchService, documentSearchService);
     }
 
     @Test
     void testSearchRejectsDocumentLimitBelowMinimum() {
         var response = restTemplate.getForEntity(
-                "/search?q=balanced&documentLimit=0", String.class);
+                "/search?q=balanced&document_limit=0", String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("documentLimit must be between 1 and 50", response.getBody());
+        assertEquals("document_limit must be between 1 and 50", response.getBody());
         verifyNoInteractions(clientSearchService, documentSearchService);
     }
 
