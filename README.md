@@ -221,10 +221,6 @@ Run the app:
 
 ```bash
 export OPENAI_API_KEY=your-key
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/wealthtech
-export SPRING_DATASOURCE_USERNAME=wealthtech
-export SPRING_DATASOURCE_PASSWORD=wealthtech
-export SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ./gradlew bootRun
 ```
 
@@ -307,12 +303,6 @@ Run integration tests. These use Testcontainers PostgreSQL and embedded Kafka, a
 ./gradlew integrationTest
 ```
 
-On some local Docker/Colima setups, Testcontainers' Ryuk sidecar can fail to start. For local verification only, rerun with:
-
-```bash
-TESTCONTAINERS_RYUK_DISABLED=true ./gradlew integrationTest
-```
-
 Run black-box e2e tests against a running app:
 
 ```bash
@@ -321,11 +311,6 @@ Run black-box e2e tests against a running app:
 
 The e2e suite waits for actuator health on port `8081` by default. Override it with `-Pe2e.managementBaseUrl=http://host:8081` or `E2E_MANAGEMENT_BASE_URL` when needed.
 
-Run all Gradle verification tasks that are wired in this project:
-
-```bash
-./gradlew test integrationTest
-```
 
 ## Monitoring
 
