@@ -16,6 +16,13 @@ spring:
     username: wealthtech
     password: wealthtech
     driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: WealthTechHikariPool
+      maximum-pool-size: 16
+      minimum-idle: 4
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
