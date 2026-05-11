@@ -6,4 +6,8 @@ public class ServiceUnavailableException extends WealthTechException {
         super(message);
     }
 
+    public ServiceUnavailableException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

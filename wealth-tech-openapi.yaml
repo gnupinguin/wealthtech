@@ -155,20 +155,25 @@ components:
         first_name:
           type: string
           minLength: 1
+          maxLength: 100
         last_name:
           type: string
           minLength: 1
+          maxLength: 100
         email:
           type: string
           format: email
           minLength: 1
+          maxLength: 320
         description:
           type: string
+          maxLength: 4096
         social_links:
           type: array
           items:
             type: string
             minLength: 1
+            maxLength: 2048
 
     Client:
       type: object
@@ -199,9 +204,11 @@ components:
         title:
           type: string
           minLength: 1
+          maxLength: 255
         content:
           type: string
           minLength: 1
+          maxLength: 1000000
 
     Document:
       type: object

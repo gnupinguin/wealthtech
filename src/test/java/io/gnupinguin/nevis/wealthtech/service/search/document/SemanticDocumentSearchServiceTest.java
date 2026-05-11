@@ -1,22 +1,27 @@
 package io.gnupinguin.nevis.wealthtech.service.search.document;
 
+import io.gnupinguin.nevis.wealthtech.exception.ServiceUnavailableException;
 import io.gnupinguin.nevis.wealthtech.persistence.projection.DocumentSearchProjection;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentChunkSearchRepository;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.SqlQueryHelper;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderErrorType;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderException;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderOperation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.retry.TransientAiException;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SemanticDocumentSearchServiceTest {
@@ -77,6 +82,40 @@ class SemanticDocumentSearchServiceTest {
         searchService.search("tech", 20);
 
         verify(repository).findSimilar(vectorString, 20);
+    }
+
+    @Test
+    void testSearchWrapsEmbeddingProviderFailure() {
+        when(embeddingModel.embed("growth")).thenThrow(new TransientAiException("rate limit for key sk-proj-secret"));
+
+        assertThatThrownBy(() -> searchService.search("growth", 5))
+                .isInstanceOfSatisfying(ServiceUnavailableException.class, exception -> {
+                    assertThat(exception).hasMessage("Third party service is unavailable");
+                    assertThat(exception.getCause()).isInstanceOfSatisfying(AiProviderException.class, cause -> {
+                        assertThat(cause.operation()).isEqualTo(AiProviderOperation.EMBEDDING_SEARCH);
+                        assertThat(cause.type()).isEqualTo(AiProviderErrorType.TRANSIENT);
+                        assertThat(cause.detail()).contains("rate limit").doesNotContain("secret");
+                    });
+                });
+
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void testSearchRejectsEmptyEmbeddingResponse() {
+        when(embeddingModel.embed("growth")).thenReturn(new float[0]);
+
+        assertThatThrownBy(() -> searchService.search("growth", 5))
+                .isInstanceOfSatisfying(ServiceUnavailableException.class, exception -> {
+                    assertThat(exception).hasMessage("Third party service is unavailable");
+                    assertThat(exception.getCause()).isInstanceOfSatisfying(AiProviderException.class, cause -> {
+                        assertThat(cause.operation()).isEqualTo(AiProviderOperation.EMBEDDING_SEARCH);
+                        assertThat(cause.type()).isEqualTo(AiProviderErrorType.INVALID_RESPONSE);
+                        assertThat(cause.detail()).isEqualTo("empty search embedding");
+                    });
+                });
+
+        verifyNoInteractions(repository);
     }
 
 }

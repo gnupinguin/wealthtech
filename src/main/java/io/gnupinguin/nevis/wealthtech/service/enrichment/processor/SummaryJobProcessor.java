@@ -4,6 +4,8 @@ import io.gnupinguin.nevis.wealthtech.config.EnrichmentProperties;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderGuard;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderOperation;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -84,15 +86,24 @@ public class SummaryJobProcessor implements DocumentEnrichmentProcessor {
                         .build()
         );
 
-        var response = chatModel.call(prompt);
+        var response = AiProviderGuard.call(
+                AiProviderOperation.SUMMARY_GENERATION,
+                () -> chatModel.call(prompt)
+        );
         var summary = getSummary(response);
         if (!StringUtils.hasText(summary)) {
-            throw new IllegalStateException("OpenAI returned an empty summary for document: " + document.id());
+            throw AiProviderGuard.invalidResponse(
+                    AiProviderOperation.SUMMARY_GENERATION,
+                    "empty summary for document: " + document.id()
+            );
         }
         return summary.trim();
     }
 
-    private static @Nullable String getSummary(ChatResponse response) {
+    private static @Nullable String getSummary(@Nullable ChatResponse response) {
+        if (response == null) {
+            return null;
+        }
         var generation = response.getResult();
         var output = generation == null ? null : generation.getOutput();
         return output == null ? null : output.getText();

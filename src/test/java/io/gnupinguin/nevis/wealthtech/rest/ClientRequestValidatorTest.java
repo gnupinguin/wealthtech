@@ -51,6 +51,22 @@ class ClientRequestValidatorTest {
     }
 
     @Test
+    void testRejectsClientRequestWithTooLongFields() {
+        assertBadRequest(() -> validator.validateCreateClient(new CreateClientRequest(
+                "x".repeat(101), "Lovelace", "ada@example.com", null, null
+        )), "first_name must be at most 100 characters");
+        assertBadRequest(() -> validator.validateCreateClient(new CreateClientRequest(
+                "Ada", "x".repeat(101), "ada@example.com", null, null
+        )), "last_name must be at most 100 characters");
+        assertBadRequest(() -> validator.validateCreateClient(new CreateClientRequest(
+                "Ada", "Lovelace", "x".repeat(309) + "@example.com", null, null
+        )), "email must be at most 320 characters");
+        assertBadRequest(() -> validator.validateCreateClient(new CreateClientRequest(
+                "Ada", "Lovelace", "ada@example.com", "x".repeat(4097), null
+        )), "description must be at most 4096 characters");
+    }
+
+    @Test
     void testRejectsClientRequestWithBlankSocialLink() {
         var request = new CreateClientRequest(
                 "Ada",
@@ -64,6 +80,19 @@ class ClientRequestValidatorTest {
     }
 
     @Test
+    void testRejectsClientRequestWithTooLongSocialLink() {
+        var request = new CreateClientRequest(
+                "Ada",
+                "Lovelace",
+                "ada@example.com",
+                null,
+                List.of("x".repeat(2049))
+        );
+
+        assertBadRequest(() -> validator.validateCreateClient(request), "social_links entries must be at most 2048 characters");
+    }
+
+    @Test
     void testAcceptsValidDocumentRequest() {
         var request = new CreateDocumentRequest("Investment Policy", "Policy content");
 
@@ -74,6 +103,18 @@ class ClientRequestValidatorTest {
     void testRejectsDocumentRequestWithMissingRequiredFields() {
         assertBadRequest(() -> validator.validateCreateDocument(new CreateDocumentRequest(null, "content")), "title is required");
         assertBadRequest(() -> validator.validateCreateDocument(new CreateDocumentRequest("title", " ")), "content is required");
+    }
+
+    @Test
+    void testRejectsDocumentRequestWithTooLongFields() {
+        assertBadRequest(() -> validator.validateCreateDocument(new CreateDocumentRequest(
+                "x".repeat(256),
+                "content"
+        )), "title must be at most 255 characters");
+        assertBadRequest(() -> validator.validateCreateDocument(new CreateDocumentRequest(
+                "title",
+                "x".repeat(1_000_001)
+        )), "content must be at most 1000000 characters");
     }
 
     private static void assertBadRequest(Runnable request, String expectedMessage) {

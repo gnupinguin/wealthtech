@@ -53,6 +53,12 @@ tasks.register<Test>("e2eTest") {
         .orElse("http://localhost:8080")
     systemProperty("e2e.baseUrl", baseUrl.get())
 
+    val managementBaseUrl = providers.gradleProperty("e2e.managementBaseUrl")
+        .orElse(providers.environmentVariable("E2E_MANAGEMENT_BASE_URL"))
+    managementBaseUrl.orNull?.let {
+        systemProperty("e2e.managementBaseUrl", it)
+    }
+
     testLogging {
         events("passed", "skipped", "failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

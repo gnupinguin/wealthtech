@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeSuite;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
@@ -27,6 +29,7 @@ abstract class AbstractApiTest {
     @BeforeSuite(alwaysRun = true)
     public void configureHttpClient() {
         var baseUrl = configuredBaseUrl();
+        var managementBaseUrl = configuredManagementBaseUrl(baseUrl);
         log.info("Configuring REST Assured base URI: {}", baseUrl);
         RestAssured.baseURI = baseUrl;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -39,12 +42,13 @@ abstract class AbstractApiTest {
                         .setParam("http.connection.timeout", 5_000)
                         .setParam("http.socket.timeout", 15_000));
 
-        log.info("Waiting for WealthTech application health endpoint to report UP");
+        log.info("Waiting for WealthTech application health endpoint to report UP: {}", managementBaseUrl);
         await("WealthTech application is healthy")
                 .ignoreExceptions()
                 .pollInterval(Duration.ofSeconds(2))
                 .atMost(Duration.ofSeconds(30))
                 .untilAsserted(() -> given()
+                        .baseUri(managementBaseUrl)
                         .when()
                         .get("/actuator/health")
                         .then()
@@ -64,5 +68,26 @@ abstract class AbstractApiTest {
             baseUrl = System.getenv().getOrDefault("E2E_BASE_URL", "http://localhost:8080");
         }
         return baseUrl;
+    }
+
+    private static String configuredManagementBaseUrl(String apiBaseUrl) {
+        var managementBaseUrl = System.getProperty("e2e.managementBaseUrl");
+        if (managementBaseUrl == null || managementBaseUrl.isBlank()) {
+            managementBaseUrl = System.getenv("E2E_MANAGEMENT_BASE_URL");
+        }
+        if (managementBaseUrl == null || managementBaseUrl.isBlank()) {
+            managementBaseUrl = defaultManagementBaseUrl(apiBaseUrl);
+        }
+        return managementBaseUrl;
+    }
+
+    private static String defaultManagementBaseUrl(String apiBaseUrl) {
+        try {
+            var uri = URI.create(apiBaseUrl);
+            return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), 8081, null, null, null).toString();
+        } catch (IllegalArgumentException | URISyntaxException e) {
+            log.warn("Could not derive management URL from API base URL '{}', falling back to localhost:8081", apiBaseUrl, e);
+            return "http://localhost:8081";
+        }
     }
 }

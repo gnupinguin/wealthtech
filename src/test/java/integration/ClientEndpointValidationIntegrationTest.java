@@ -109,6 +109,22 @@ class ClientEndpointValidationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testCreateClientWithTooLongDescriptionReturns400() {
+        var request = new CreateClientRequest(
+                "Jane",
+                "Doe",
+                "jane.doe@example.com",
+                "x".repeat(4097),
+                null
+        );
+
+        var response = restTemplate.postForEntity("/clients", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("description must be at most 4096 characters", response.getBody());
+    }
+
+    @Test
     void testCreateClientWithBlankSocialLinkReturns400() {
         var request = new CreateClientRequest(
                 "Jane",

@@ -6,18 +6,18 @@ The implementation uses Spring Boot and Java, PostgreSQL with `pg_trgm` and `pgv
 
 ## Requirement Match
 
-| Task requirement | Implementation |
-| --- | --- |
-| `POST /clients` with `first_name`, `last_name`, `email`, optional `description`, `social_links` | Implemented. `social_links` is exposed as `array<string>` to match the PDF. |
-| `POST /clients/{id}/documents` with `title`, `content` | Implemented. Returns `201` and enqueues summary/chunking jobs. |
-| `GET /search?q=...` | Implemented. Searches clients and documents in parallel. |
-| Client search over email/name/description | Implemented with PostgreSQL trigram similarity and prefix matching. |
-| Document search by similar terms | Implemented with embeddings stored in `pgvector`. |
-| Optional quick summary | Implemented as an asynchronous document enrichment job. |
-| Docker Compose reproducibility | `docker-compose.yml` starts PostgreSQL, Kafka, and the app. |
-| Tests for core logic and edge cases | Unit, integration, and black-box e2e test suites are included. |
-| README with setup and examples | This file. |
-| API documentation | `wealth-tech-openapi.yaml`. |
+| Task requirement | Implementation                                                                       |
+| --- |--------------------------------------------------------------------------------------|
+| `POST /clients` with `first_name`, `last_name`, `email`, optional `description`, `social_links` | Implemented. `social_links` is exposed as `array<string>` to match the requirements. |
+| `POST /clients/{id}/documents` with `title`, `content` | Implemented. Returns `201` and enqueues summary/chunking jobs.                       |
+| `GET /search?q=...` | Implemented. Searches clients and documents in parallel.                             |
+| Client search over email/name/description | Implemented with PostgreSQL trigram similarity and prefix matching.                  |
+| Document search by similar terms | Implemented with embeddings stored in `pgvector`.                                    |
+| Optional quick summary | Implemented as an asynchronous document enrichment job.                              |
+| Docker Compose reproducibility | `docker-compose.yml` starts PostgreSQL, Kafka, and the app.                          |
+| Tests for core logic and edge cases | Unit, integration, and black-box e2e test suites are included.                       |
+| README with setup and examples | This file.                                                                           |
+| API documentation | `wealth-tech-openapi.yaml`.                                                          |
 
 ## Architecture
 
@@ -89,12 +89,6 @@ Documents are split into chunks before embedding. Chunking improves search quali
 
 The tradeoff is more rows, more embeddings to generate, and more storage. For a search API, that extra complexity is worth it because snippet-level matches are more useful than whole-document-only matches.
 
-### Kafka vs DB-Backed Jobs
-
-Asynchronous enrichment uses Kafka for worker-style processing, with PostgreSQL keeping the source-of-truth outbox state. Kafka gives better parallel processing, retry/DLT support, and backpressure options than a simple in-process task.
-
-The tradeoff is extra infrastructure and operational overhead. A pure DB-backed job queue would be simpler and more transactionally compact for a small deployment, but would be less suitable for very high throughput. This project uses the heavier path because it makes retry and worker boundaries explicit.
-
 ### Transactional Outbox vs Direct Kafka Publish
 
 Document creation writes enrichment events into `document_enrichment_outbox_events` in the same transaction as the document. A scheduled publisher then sends pending events to Kafka and marks them as published. This avoids the classic direct-publish failure case where a document is saved but its enrichment event is lost.
@@ -117,7 +111,7 @@ A separate summary table would be more flexible for model-specific, versioned, o
 
 ### Grouped Search Response vs Mixed List
 
-The PDF sketched `/search` as an array, but the implementation returns grouped results:
+The task `/search` enpoint as an array, but the implementation returns grouped results:
 
 ```json
 {
@@ -158,16 +152,10 @@ The API uses `client_limit` and `document_limit` instead of offset pagination. T
 
 The tradeoff is that it is not designed for browsing very large result sets. If that becomes a product requirement, search would need cursoring and filtering.
 
-### Production-Ready MVP vs Fully Production-Optimized System
-
-The implementation prioritizes a simple, reproducible MVP with a clear production evolution path. It includes validation, tests, Docker Compose, API documentation, metrics, outbox-backed enrichment, retries, and DLT support.
-
-A fully production-optimized system would add managed secrets, observability dashboards, alerting, schema migrations, load testing, stronger security, and possibly separate search/enrichment deployments.
-
 ## Prerequisites
 
 - Docker and Docker Compose.
-- A compatible JDK if running the app directly instead of through Docker.
+- JDK 25 if running the app directly instead of through Docker.
 - An API key for the configured embedding/chat provider in a real run. The current local configuration reads it from `OPENAI_API_KEY`.
 
 Create a local environment file:
@@ -177,6 +165,15 @@ cp .env.example .env
 ```
 
 Then edit `.env` and set `OPENAI_API_KEY`. Do not commit `.env`. If a real key was ever committed or shared, rotate it.
+
+## OpenAI Models
+
+The service uses OpenAI through Spring AI:
+
+- Embeddings: `text-embedding-3-small` with `dimensions: 1536`.
+- Chat/document summaries: `gpt-5-nano`.
+
+Embedding requests explicitly set the vector length to `1536`, matching the PostgreSQL `VECTOR(1536)` column used for document chunk search.
 
 ## Run With Docker Compose
 
@@ -247,20 +244,6 @@ curl -s -X POST http://localhost:8080/clients \
   }'
 ```
 
-Example response:
-
-```json
-{
-  "id": "6d7cc828-8fb3-4efe-ae9c-523d14df21fa",
-  "first_name": "John",
-  "last_name": "Doe",
-  "email": "john.doe@neviswealth.com",
-  "description": "High net worth individual interested in tech stocks and real estate.",
-  "created_at": "2026-05-11T10:00:00Z",
-  "social_links": ["https://linkedin.com/in/johndoe"]
-}
-```
-
 Create a document for that client:
 
 ```bash
@@ -272,28 +255,36 @@ curl -s -X POST http://localhost:8080/clients/6d7cc828-8fb3-4efe-ae9c-523d14df21
   }'
 ```
 
-Search clients and documents:
+Semantic search:
 
 ```bash
-curl -s 'http://localhost:8080/search?q=NevisWealth'
 curl -s 'http://localhost:8080/search?q=address%20proof'
-curl -s 'http://localhost:8080/search?q=moderate%20risk%20portfolio&client_limit=5&document_limit=10'
 ```
 
-Example search response:
+Example response:
 
 ```json
 {
   "query": "address proof",
-  "clients": [],
+  "clients": [
+    {
+      "id": "6d7cc828-8fb3-4efe-ae9c-523d14df21fa",
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@neviswealth.com",
+      "description": "High net worth individual interested in tech stocks and real estate.",
+      "social_links": ["https://linkedin.com/in/johndoe"],
+      "score": 0.73
+    }
+  ],
   "documents": [
     {
-      "id": "3bf4dd1e-6a19-42af-922e-2d7ec174b739",
+      "id": "4f1ff25c-f514-42d6-8f1f-881b7de80928",
       "client_id": "6d7cc828-8fb3-4efe-ae9c-523d14df21fa",
+      "score": 0.86,
       "title": "Address verification",
-      "matched_chunk": "Utility bill confirming the client address and residency.",
-      "summary": "The document confirms the client's address and residency using a utility bill.",
-      "score": 0.82
+      "summary": "Utility bill confirming the client's address and residency.",
+      "matched_chunk": "Utility bill confirming the client address and residency."
     }
   ],
   "errors": []
@@ -327,6 +318,8 @@ Run black-box e2e tests against a running app:
 ```bash
 ./gradlew e2eTest -Pe2e.baseUrl=http://localhost:8080
 ```
+
+The e2e suite waits for actuator health on port `8081` by default. Override it with `-Pe2e.managementBaseUrl=http://host:8081` or `E2E_MANAGEMENT_BASE_URL` when needed.
 
 Run all Gradle verification tasks that are wired in this project:
 

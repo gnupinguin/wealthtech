@@ -3,28 +3,37 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS clients (
                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                         first_name TEXT NOT NULL,
-                         last_name TEXT NOT NULL,
-                         email TEXT NOT NULL UNIQUE,
+                         first_name VARCHAR(100) NOT NULL,
+                         last_name VARCHAR(100) NOT NULL,
+                         email VARCHAR(320) NOT NULL UNIQUE,
                          description TEXT,
-                         created_at TIMESTAMPTZ NOT NULL
+                         created_at TIMESTAMPTZ NOT NULL,
+
+                         CONSTRAINT chk_clients_description_length
+                             CHECK (description IS NULL OR LENGTH(description) <= 4096)
 );
 
 CREATE TABLE IF NOT EXISTS client_social_links (
                                      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                      client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-                                     url TEXT NOT NULL,
+                                     url VARCHAR(2048) NOT NULL,
                                      created_at TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS documents (
                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                            client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-                           title TEXT NOT NULL,
+                           title VARCHAR(255) NOT NULL,
                            content TEXT NOT NULL,
                            summary TEXT,
                            created_at TIMESTAMPTZ NOT NULL,
-                           updated_at TIMESTAMPTZ NOT NULL
+                           updated_at TIMESTAMPTZ NOT NULL,
+
+                           CONSTRAINT chk_documents_content_length
+                               CHECK (LENGTH(content) <= 1000000),
+
+                           CONSTRAINT chk_documents_summary_length
+                               CHECK (summary IS NULL OR LENGTH(summary) <= 4096)
 );
 
 CREATE TABLE IF NOT EXISTS document_chunks (
@@ -34,6 +43,9 @@ CREATE TABLE IF NOT EXISTS document_chunks (
                                  content TEXT NOT NULL,
                                  embedding VECTOR(1536) NOT NULL,
                                  created_at TIMESTAMPTZ NOT NULL,
+
+                                 CONSTRAINT chk_document_chunks_content_length
+                                     CHECK (LENGTH(content) <= 100000),
 
                                  CONSTRAINT uk_document_chunks_document_index
                                      UNIQUE (document_id, chunk_index)

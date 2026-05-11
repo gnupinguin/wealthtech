@@ -4,6 +4,9 @@ import io.gnupinguin.nevis.wealthtech.config.EnrichmentProperties;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderErrorType;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderException;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderOperation;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.retry.NonTransientAiException;
 
 import java.time.Instant;
 import java.util.List;
@@ -95,14 +99,33 @@ class SummaryJobProcessorTest {
     }
 
     @Test
-    void testProcessThrowsWhenOpenAiReturnsBlankSummary() {
+    void testProcessThrowsWhenProviderReturnsBlankSummary() {
         var documentId = UUID.randomUUID();
         when(documentRepository.findById(documentId)).thenReturn(Optional.of(document(documentId)));
         when(chatModel.call(any(Prompt.class))).thenReturn(chatResponse(" "));
 
         assertThatThrownBy(() -> processor.process(event(documentId)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("OpenAI returned an empty summary for document: " + documentId);
+                .isInstanceOfSatisfying(AiProviderException.class, exception -> {
+                    assertThat(exception.operation()).isEqualTo(AiProviderOperation.SUMMARY_GENERATION);
+                    assertThat(exception.type()).isEqualTo(AiProviderErrorType.INVALID_RESPONSE);
+                    assertThat(exception.detail()).isEqualTo("empty summary for document: " + documentId);
+                });
+
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void testProcessWrapsSummaryProviderFailure() {
+        var documentId = UUID.randomUUID();
+        when(documentRepository.findById(documentId)).thenReturn(Optional.of(document(documentId)));
+        when(chatModel.call(any(Prompt.class))).thenThrow(new NonTransientAiException("invalid API key sk-proj-secret"));
+
+        assertThatThrownBy(() -> processor.process(event(documentId)))
+                .isInstanceOfSatisfying(AiProviderException.class, exception -> {
+                    assertThat(exception.operation()).isEqualTo(AiProviderOperation.SUMMARY_GENERATION);
+                    assertThat(exception.type()).isEqualTo(AiProviderErrorType.PERMANENT);
+                    assertThat(exception.detail()).contains("invalid API key").doesNotContain("secret");
+                });
 
         verify(documentRepository, never()).save(any());
     }

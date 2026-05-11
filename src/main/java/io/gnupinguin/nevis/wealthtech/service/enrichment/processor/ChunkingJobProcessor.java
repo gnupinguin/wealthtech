@@ -5,10 +5,14 @@ import io.gnupinguin.nevis.wealthtech.persistence.entity.DocumentEntity;
 import io.gnupinguin.nevis.wealthtech.persistence.entity.JobType;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentChunkRepository;
 import io.gnupinguin.nevis.wealthtech.persistence.repository.DocumentRepository;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderGuard;
+import io.gnupinguin.nevis.wealthtech.service.ai.AiProviderOperation;
 import io.gnupinguin.nevis.wealthtech.service.enrichment.DocumentEnrichmentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -45,7 +49,10 @@ public class ChunkingJobProcessor implements DocumentEnrichmentProcessor {
         log.info("Processing CHUNKING event {} for document {}", event.id(), event.documentId());
         var texts = splitDocumentContent(event);
 
-        EmbeddingResponse response = embeddingModel.embedForResponse(texts);
+        EmbeddingResponse response = AiProviderGuard.call(
+                AiProviderOperation.DOCUMENT_CHUNKING,
+                () -> embeddingModel.embedForResponse(texts)
+        );
         var chunks = createChunks(event, response, texts);
 
         chunkRepository.saveAll(chunks);
@@ -60,11 +67,43 @@ public class ChunkingJobProcessor implements DocumentEnrichmentProcessor {
                 .toList();
     }
 
-    private static @NonNull List<DocumentChunkEntity> createChunks(@NonNull DocumentEnrichmentEvent event, @NonNull EmbeddingResponse response, @NonNull List<String> texts) {
+    private static @NonNull List<DocumentChunkEntity> createChunks(@NonNull DocumentEnrichmentEvent event,
+                                                                   @Nullable EmbeddingResponse response,
+                                                                   @NonNull List<String> texts) {
         var now = Instant.now();
-        return response.getResults().stream()
-                .map(embedding -> new DocumentChunkEntity(null, event.documentId(), embedding.getIndex(), texts.get(embedding.getIndex()), embedding.getOutput(), now))
+        var embeddings = AiProviderGuard.requireEmbeddings(
+                AiProviderOperation.DOCUMENT_CHUNKING,
+                response,
+                texts.size(),
+                "invalid chunk embedding response for document: " + event.documentId()
+        );
+        return embeddings.stream()
+                .map(embedding -> toChunk(event, texts, now, embedding))
                 .toList();
+    }
+
+    private static @NonNull DocumentChunkEntity toChunk(@NonNull DocumentEnrichmentEvent event,
+                                                        @NonNull List<String> texts,
+                                                        @NonNull Instant now,
+                                                        @Nullable Embedding embedding) {
+        var detail = "invalid chunk embedding response for document: " + event.documentId();
+        var embeddingResult = AiProviderGuard.requireEmbeddingResult(
+                AiProviderOperation.DOCUMENT_CHUNKING,
+                embedding,
+                detail
+        );
+        var index = AiProviderGuard.requireEmbeddingIndex(
+                AiProviderOperation.DOCUMENT_CHUNKING,
+                embeddingResult,
+                texts.size(),
+                detail
+        );
+        var output = AiProviderGuard.requireEmbedding(
+                AiProviderOperation.DOCUMENT_CHUNKING,
+                embeddingResult.getOutput(),
+                "empty chunk embedding for document: " + event.documentId() + ", chunk: " + index
+        );
+        return new DocumentChunkEntity(null, event.documentId(), index, texts.get(index), output, now);
     }
 
     private @NonNull DocumentEntity getDocument(@NonNull DocumentEnrichmentEvent event) {

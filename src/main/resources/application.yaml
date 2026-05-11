@@ -9,6 +9,7 @@ spring:
       embedding:
         options:
           model: text-embedding-3-small
+          dimensions: 1536
       chat:
         enabled: true
         options:
