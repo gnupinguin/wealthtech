@@ -164,9 +164,7 @@ Create a local environment file:
 cp .env.example .env
 ```
 
-Then edit `.env` and set `OPENAI_API_KEY`. Do not commit `.env`. If a real key was ever committed or shared, rotate it.
-
-## OpenAI Models
+Then edit `.env` and set `OPENAI_API_KEY`.
 
 The service uses OpenAI through Spring AI:
 
