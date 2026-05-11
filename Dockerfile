@@ -7,6 +7,7 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
+COPY e2e-tests/build.gradle.kts e2e-tests/build.gradle.kts
 
 RUN ./gradlew dependencies --no-daemon -q
 

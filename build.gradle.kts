@@ -81,13 +81,8 @@ tasks.register<Test>("integrationTest") {
     shouldRunAfter("test")
 }
 
-tasks.register<Test>("e2eTest") {
-    description = "Runs end-to-end tests against real external services."
+tasks.register("e2eTest") {
+    description = "Runs black-box end-to-end tests against a running WealthTech application."
     group = "verification"
-    testClassesDirs = testSourceSet.get().output.classesDirs
-    classpath = testSourceSet.get().runtimeClasspath
-    useJUnitPlatform {
-        includeTags("e2e")
-    }
-    shouldRunAfter("integrationTest")
+    dependsOn(":e2e-tests:e2eTest")
 }
